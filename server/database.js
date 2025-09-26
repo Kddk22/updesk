@@ -19,8 +19,18 @@ const dbPath = path.join(dataDir, 'updesk.db');
 // Create database connection
 const db = new sqlite3.Database(dbPath);
 
-// Promisify database methods
-db.runAsync = promisify(db.run.bind(db));
+// Promisify database methods with proper context handling
+db.runAsync = function(...args) {
+  return new Promise((resolve, reject) => {
+    db.run(...args, function(err) {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(this); // 'this' contains lastID, changes, etc.
+      }
+    });
+  });
+};
 db.getAsync = promisify(db.get.bind(db));
 db.allAsync = promisify(db.all.bind(db));
 
