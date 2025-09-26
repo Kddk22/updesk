@@ -1,0 +1,62 @@
+version: '3.8'
+
+services:
+  updesk:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: updesk-app
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+    volumes:
+      # Persist SQLite database
+      - updesk_data:/app/data
+      # Optional: Mount custom wallpapers
+      - ./public/wallpapers:/app/public/wallpapers:ro
+      # Optional: Mount custom icons
+      - ./public/icons:/app/public/icons:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3001/api/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    labels:
+      - "com.updesk.description=UpDesk Virtual Desktop Launcher"
+      - "com.updesk.version=1.0.0"
+    networks:
+      - updesk_network
+
+  # Optional: Nginx reverse proxy for production
+  nginx:
+    image: nginx:alpine
+    container_name: updesk-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - updesk
+    restart: unless-stopped
+    networks:
+      - updesk_network
+    profiles:
+      - production
+
+volumes:
+  updesk_data:
+    driver: local
+    labels:
+      - "com.updesk.description=UpDesk SQLite database storage"
+
+networks:
+  updesk_network:
+    driver: bridge
+    labels:
+      - "com.updesk.description=UpDesk application network"

@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <rect width="64" height="64" rx="8" fill="#009639"/>
+  <rect x="8" y="8" width="48" height="48" rx="6" fill="white"/>
+  
+  <!-- Nginx logo -->
+  <path d="M16 16 L16 48 L20 48 L20 28 L36 48 L40 48 L40 28 L44 48 L48 48 L48 16 L44 16 L44 36 L28 16 L24 16 L24 36 L20 16 Z" fill="#009639"/>
+  
+  <!-- Simplified version -->
+  <rect x="18" y="18" width="4" height="28" fill="#009639"/>
+  <rect x="26" y="18" width="4" height="28" fill="#009639"/>
+  <rect x="34" y="18" width="4" height="28" fill="#009639"/>
+  <rect x="42" y="18" width="4" height="28" fill="#009639"/>
+  
+  <!-- Connection lines -->
+  <path d="M20 20 L28 40" stroke="#009639" stroke-width="2"/>
+  <path d="M30 24 L38 44" stroke="#009639" stroke-width="2"/>
+</svg>

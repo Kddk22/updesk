@@ -1,0 +1,34 @@
+{
+  "name": "updesk-virtual-desktop",
+  "version": "1.0.0",
+  "description": "Virtual Desktop Launcher with Vue.js 3 and SQLite",
+  "main": "server/index.js",
+  "scripts": {
+    "dev": "concurrently \"npm run server:dev\" \"npm run client:dev\"",
+    "client:dev": "vite",
+    "client:build": "vite build",
+    "client:preview": "vite preview",
+    "server:dev": "nodemon server/index.js",
+    "server:start": "node server/index.js",
+    "build": "npm run client:build",
+    "start": "npm run server:start",
+    "init-db": "node server/init-db.js"
+  },
+  "dependencies": {
+    "vue": "^3.4.0",
+    "vue-router": "^4.2.5",
+    "pinia": "^2.1.7",
+    "express": "^4.18.2",
+    "sqlite3": "^5.1.6",
+    "cors": "^2.8.5",
+    "helmet": "^7.1.0",
+    "compression": "^1.7.4"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.0.0",
+    "vite": "^5.0.0",
+    "concurrently": "^8.2.2",
+    "nodemon": "^3.0.2"
+  },
+  "type": "module"
+}

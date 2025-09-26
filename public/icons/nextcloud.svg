@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <circle cx="32" cy="32" r="30" fill="#0082C9"/>
+  <circle cx="32" cy="32" r="24" fill="white"/>
+  
+  <!-- Cloud shape -->
+  <path d="M20 36 C16 36 14 32 16 28 C18 24 24 24 26 26 C28 22 34 22 36 26 C38 24 44 24 46 28 C48 32 46 36 42 36 Z" fill="#0082C9"/>
+  
+  <!-- Arrow up (upload) -->
+  <path d="M32 28 L28 32 L30 32 L30 40 L34 40 L34 32 L36 32 Z" fill="white"/>
+  <path d="M32 28 L28 32 L30 30 L32 28 L34 30 L36 32 Z" fill="white"/>
+</svg>

@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <rect width="64" height="64" rx="8" fill="#E5A00D"/>
+  <circle cx="32" cy="32" r="24" fill="white"/>
+  <circle cx="32" cy="32" r="18" fill="#E5A00D"/>
+  
+  <!-- Plex play button -->
+  <path d="M26 20 L26 44 L42 32 Z" fill="white"/>
+  
+  <!-- Decorative elements -->
+  <circle cx="32" cy="32" r="2" fill="white"/>
+</svg>

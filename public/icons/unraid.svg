@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <rect width="64" height="64" rx="8" fill="#FF6600"/>
+  <rect x="8" y="8" width="48" height="48" rx="6" fill="white"/>
+  
+  <!-- Unraid logo elements -->
+  <rect x="16" y="20" width="32" height="24" rx="2" fill="#FF6600"/>
+  
+  <!-- Array representation -->
+  <rect x="20" y="24" width="4" height="16" fill="white"/>
+  <rect x="26" y="24" width="4" height="16" fill="white"/>
+  <rect x="32" y="24" width="4" height="16" fill="white"/>
+  <rect x="38" y="24" width="4" height="16" fill="white"/>
+  
+  <!-- Parity indicator -->
+  <rect x="20" y="42" width="22" height="2" fill="white"/>
+  
+  <!-- Status indicators -->
+  <circle cx="22" cy="22" r="1" fill="#00FF00"/>
+  <circle cx="28" cy="22" r="1" fill="#00FF00"/>
+  <circle cx="34" cy="22" r="1" fill="#00FF00"/>
+  <circle cx="40" cy="22" r="1" fill="#FFFF00"/>
+</svg>
