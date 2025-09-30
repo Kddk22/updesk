@@ -63,6 +63,57 @@ export const initDatabase = async () => {
       )
     `);
 
+    // UpFlow App: Tabelle für Zähler
+    await db.runAsync(`
+      CREATE TABLE IF NOT EXISTS zaehler (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        zaehlertyp TEXT NOT NULL,
+        zaehlernummer TEXT NOT NULL UNIQUE,
+        name TEXT NOT NULL,
+        vertrags_jahresverbrauch REAL,
+        vertrags_datum DATE,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // UpFlow App: Tabelle für Zählerstände
+    await db.runAsync(`
+      CREATE TABLE IF NOT EXISTS zaehlerstaende (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        zaehler_id INTEGER NOT NULL,
+        datum DATE NOT NULL,
+        stand REAL NOT NULL,
+        bemerkung TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (zaehler_id) REFERENCES zaehler (id) ON DELETE CASCADE
+      )
+    `);
+
+    // UpSum App: Tabelle für Einnahmen und Ausgaben
+    await db.runAsync(`
+      CREATE TABLE IF NOT EXISTS transaktionen (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        datum DATE NOT NULL,
+        typ TEXT NOT NULL CHECK (typ IN ('Einnahme', 'Ausgabe')),
+        kategorie TEXT NOT NULL,
+        betrag REAL NOT NULL,
+        beschreibung TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // UpNote App: Tabelle für Notizen
+    await db.runAsync(`
+      CREATE TABLE IF NOT EXISTS notizen (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        titel TEXT NOT NULL,
+        inhalt TEXT,
+        erstellungsdatum DATETIME DEFAULT CURRENT_TIMESTAMP,
+        letzte_aenderung DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
     // Check if we need to insert default data
     const programCount = await db.getAsync('SELECT COUNT(*) as count FROM programs');
     
@@ -71,44 +122,44 @@ export const initDatabase = async () => {
       
       const defaultPrograms = [
         {
+          name: 'UpFlow',
+          url: '/apps/upflow',
+          icon: '/icons/upflow.svg',
+          position_x: 0,
+          position_y: 0
+        },
+        {
+          name: 'UpSum',
+          url: '/apps/upsum',
+          icon: '/icons/upsum.svg',
+          position_x: 1,
+          position_y: 0
+        },
+        {
+          name: 'UpNote',
+          url: '/apps/upnote',
+          icon: '/icons/upnote.svg',
+          position_x: 2,
+          position_y: 0
+        },
+        {
           name: 'Google',
           url: 'https://www.google.com',
           icon: '/icons/google.svg',
           position_x: 0,
-          position_y: 0
+          position_y: 1
         },
         {
           name: 'GitHub',
           url: 'https://github.com',
           icon: '/icons/github.svg',
           position_x: 1,
-          position_y: 0
+          position_y: 1
         },
         {
           name: 'YouTube',
           url: 'https://www.youtube.com',
           icon: '/icons/youtube.svg',
-          position_x: 2,
-          position_y: 0
-        },
-        {
-          name: 'VS Code Web',
-          url: 'https://vscode.dev',
-          icon: '/icons/vscode.svg',
-          position_x: 0,
-          position_y: 1
-        },
-        {
-          name: 'Stack Overflow',
-          url: 'https://stackoverflow.com',
-          icon: '/icons/stackoverflow.svg',
-          position_x: 1,
-          position_y: 1
-        },
-        {
-          name: 'MDN Web Docs',
-          url: 'https://developer.mozilla.org',
-          icon: '/icons/mdn.svg',
           position_x: 2,
           position_y: 1
         }

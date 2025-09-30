@@ -4,6 +4,11 @@ import { createRouter, createWebHistory } from 'vue-router'
 import App from './App.vue'
 import Desktop from './views/Desktop.vue'
 
+// App-Komponenten importieren
+import FlowUp from './views/apps/FlowUp.vue'
+import UpSum from './views/apps/UpSum.vue'
+import UpNote from './views/apps/UpNote.vue'
+
 // Global styles
 import './styles/main.css'
 
@@ -13,6 +18,21 @@ const routes = [
     path: '/',
     name: 'Desktop',
     component: Desktop
+  },
+  {
+    path: '/apps/upflow',
+    name: 'FlowUp',
+    component: FlowUp
+  },
+  {
+    path: '/apps/upsum',
+    name: 'UpSum',
+    component: UpSum
+  },
+  {
+    path: '/apps/upnote',
+    name: 'UpNote',
+    component: UpNote
   }
 ]
 

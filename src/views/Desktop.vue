@@ -48,11 +48,20 @@
       v-if="showSettings"
       @close="closeSettingsModal"
     />
+    
+    <!-- Desktop Windows -->
+    <component
+      v-for="window in openWindows"
+      :key="window.id"
+      :is="window.component"
+      @close="closeWindow(window.id)"
+    />
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { useProgramsStore } from '../stores/programs'
 import { useSettingsStore } from '../stores/settings'
 import TopBar from '../components/TopBar.vue'
@@ -61,7 +70,9 @@ import ProgramIcon from '../components/ProgramIcon.vue'
 import ProgramModal from '../components/ProgramModal.vue'
 import ContextMenu from '../components/ContextMenu.vue'
 import SettingsModal from '../components/SettingsModal.vue'
+import FlowUp from './apps/FlowUp.vue'
 
+const router = useRouter()
 const programsStore = useProgramsStore()
 const settingsStore = useSettingsStore()
 
@@ -73,6 +84,8 @@ const showContextMenu = ref(false)
 const contextMenuX = ref(0)
 const contextMenuY = ref(0)
 const showSettings = ref(false)
+const openWindows = ref([])
+let windowIdCounter = 0
 
 // Computed properties
 const programs = computed(() => programsStore.programs)
@@ -92,7 +105,32 @@ const desktopGridStyle = computed(() => {
 
 // Methods
 const openProgram = (program) => {
-  window.open(program.url, '_blank')
+  // Check if it's FlowUp app - open as window
+  if (program.url === '/apps/upflow') {
+    openWindow('FlowUp', FlowUp)
+  } else if (program.url.startsWith('/apps/')) {
+    // Navigate to other internal apps using Vue Router
+    router.push(program.url)
+  } else {
+    // Open external URLs in new tab
+    window.open(program.url, '_blank')
+  }
+}
+
+const openWindow = (name, component) => {
+  const windowId = ++windowIdCounter
+  openWindows.value.push({
+    id: windowId,
+    name,
+    component
+  })
+}
+
+const closeWindow = (windowId) => {
+  const index = openWindows.value.findIndex(w => w.id === windowId)
+  if (index !== -1) {
+    openWindows.value.splice(index, 1)
+  }
 }
 
 const editProgram = (program) => {

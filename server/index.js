@@ -8,6 +8,10 @@ import { dirname } from 'path';
 import { initDatabase } from './database.js';
 import programsRouter from './routes/programs.js';
 import settingsRouter from './routes/settings.js';
+import zaehlerRouter from './routes/zaehler.js';
+import zaehlerstaendeRouter from './routes/zaehlerstaende.js';
+import transaktionenRouter from './routes/transaktionen.js';
+import notizenRouter from './routes/notizen.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -41,6 +45,10 @@ await initDatabase();
 // API routes
 app.use('/api/programs', programsRouter);
 app.use('/api/settings', settingsRouter);
+app.use('/api/zaehler', zaehlerRouter);
+app.use('/api/zaehlerstaende', zaehlerstaendeRouter);
+app.use('/api/transaktionen', transaktionenRouter);
+app.use('/api/notizen', notizenRouter);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

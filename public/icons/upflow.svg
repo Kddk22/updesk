@@ -1,0 +1,23 @@
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background Circle -->
+  <circle cx="32" cy="32" r="30" fill="url(#gradient)" stroke="#2563eb" stroke-width="2"/>
+  
+  <!-- Lightning Bolt -->
+  <path d="M28 18L22 32H30L26 46L40 28H32L36 18H28Z" fill="#ffffff" stroke="#1e40af" stroke-width="1"/>
+  
+  <!-- Flow Lines -->
+  <path d="M16 24C20 22 24 20 28 18" stroke="#60a5fa" stroke-width="2" stroke-linecap="round" opacity="0.7"/>
+  <path d="M36 46C40 44 44 42 48 40" stroke="#60a5fa" stroke-width="2" stroke-linecap="round" opacity="0.7"/>
+  
+  <!-- Meter Indicators -->
+  <circle cx="18" cy="20" r="2" fill="#fbbf24"/>
+  <circle cx="46" cy="44" r="2" fill="#10b981"/>
+  
+  <!-- Gradient Definition -->
+  <defs>
+    <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1e40af;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+</svg>

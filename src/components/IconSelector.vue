@@ -71,12 +71,7 @@ const categories = ref([
 
 const availableIcons = ref([
   // System Icons
-  { name: 'Firefox', path: '/icons/firefox.svg', category: 'system' },
-  { name: 'Chrome', path: '/icons/chrome.svg', category: 'system' },
-  { name: 'Terminal', path: '/icons/terminal.svg', category: 'system' },
   { name: 'Dateien', path: '/icons/files.svg', category: 'system' },
-  { name: 'Einstellungen', path: '/icons/settings.svg', category: 'system' },
-  { name: 'Rechner', path: '/icons/calculator.svg', category: 'system' },
   { name: 'Standard App', path: '/icons/default-app.svg', category: 'system' },
   
   // Self-Hosting & Server Icons
@@ -103,7 +98,6 @@ const availableIcons = ref([
   // Security & Network
   { name: 'Pi-hole', path: '/icons/pihole.svg', category: 'security' },
   { name: 'Bitwarden', path: '/icons/bitwarden.svg', category: 'security' },
-  { name: 'OPNsense', path: '/icons/opnsense.svg', category: 'security' },
 ])
 
 const filteredIcons = computed(() => {

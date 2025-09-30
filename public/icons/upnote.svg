@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="24px" height="24px" viewBox="0 0 24 24" version="1.1" xmlns="http://www.w3.org/2000/svg">
+    <title>UpNote</title>
+    <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <rect fill="#FBBC05" x="0" y="0" width="24" height="24" rx="4"></rect>
+        <path d="M4,4 L20,4 L20,20 L4,20 L4,4 Z" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+        <path d="M8,8 L16,8" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round"></path>
+        <path d="M8,12 L16,12" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round"></path>
+        <path d="M8,16 L12,16" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round"></path>
+    </g>
+</svg>
