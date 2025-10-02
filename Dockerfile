@@ -49,6 +49,10 @@ RUN mkdir -p /app/data && \
 # Copy static assets
 COPY public/ ./public/
 
+# Copy update script
+COPY update.sh ./update.sh
+RUN chmod +x ./update.sh
+
 # Switch to non-root user
 USER updesk
 

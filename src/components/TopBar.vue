@@ -12,6 +12,19 @@
     </div>
     
     <div class="top-bar-right">
+      <!-- Update Button -->
+      <button 
+        v-if="updateAvailable"
+        class="update-button"
+        @click="showUpdateModal"
+        title="Update verfügbar"
+      >
+        <svg class="icon update-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+        </svg>
+        <span class="update-badge">1</span>
+      </button>
+
       <button 
         class="theme-toggle"
         @click="toggleTheme"
@@ -30,6 +43,13 @@
       </div>
     </div>
   </div>
+
+  <!-- Update Modal -->
+  <UpdateModal 
+    :show="isUpdateModalVisible"
+    :updateInfo="updateInfo"
+    @close="isUpdateModalVisible = false"
+  />
 </template>
 
 <script setup>
@@ -161,6 +181,68 @@ onUnmounted(() => {
   font-size: 12px;
   color: var(--text-secondary);
   font-variant-numeric: tabular-nums;
+}
+
+.update-button {
+  position: relative;
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.update-button:hover {
+  background: var(--bg-tertiary);
+  color: var(--primary-color);
+}
+
+.update-icon {
+  animation: rotate 2s linear infinite;
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.update-badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: white;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 2px 4px;
+  border-radius: 10px;
+  min-width: 14px;
+  height: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.9;
+  }
 }
 
 @media (max-width: 768px) {

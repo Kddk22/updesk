@@ -13,6 +13,7 @@ import zaehlerstaendeRouter from './routes/zaehlerstaende.js';
 import transaktionenRouter from './routes/transaktionen.js';
 import notizenRouter from './routes/notizen.js';
 import iconsRouter from './routes/icons.js';
+import updatesRouter from './routes/updates.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -51,6 +52,7 @@ app.use('/api/zaehlerstaende', zaehlerstaendeRouter);
 app.use('/api/transaktionen', transaktionenRouter);
 app.use('/api/notizen', notizenRouter);
 app.use('/api/icons', iconsRouter);
+app.use('/api/updates', updatesRouter);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
