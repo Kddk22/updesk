@@ -47,7 +47,7 @@
               <div class="stat-icon">⚡</div>
               <div class="stat-info">
                 <h3>Strom</h3>
-                <p class="stat-value">{{ latestReadings.strom?.zaehlerstand || 'Keine Daten' }}</p>
+                <p class="stat-value">{{ latestReadings.strom?.stand || 'Keine Daten' }}</p>
                 <p class="stat-label">kWh</p>
               </div>
             </div>
@@ -56,7 +56,7 @@
               <div class="stat-icon">💧</div>
               <div class="stat-info">
                 <h3>Wasser</h3>
-                <p class="stat-value">{{ latestReadings.wasser?.zaehlerstand || 'Keine Daten' }}</p>
+                <p class="stat-value">{{ latestReadings.wasser?.stand || 'Keine Daten' }}</p>
                 <p class="stat-label">m³</p>
               </div>
             </div>
@@ -85,7 +85,7 @@
                   <span class="reading-type">{{ reading.kategorie }}</span>
                 </div>
                 <div class="reading-value">
-                  <span class="value">{{ reading.zaehlerstand }}</span>
+                  <span class="value">{{ reading.stand }}</span>
                   <span class="unit">{{ reading.kategorie === 'strom' ? 'kWh' : 'm³' }}</span>
                 </div>
                 <div class="reading-date">
@@ -119,7 +119,7 @@
                     :key="meter.id"
                     :value="meter.id"
                   >
-                    {{ meter.zaehler_nummer }} ({{ meter.kategorie }})
+                    {{ meter.zaehlernummer }} ({{ meter.zaehlertyp }})
                   </option>
                 </select>
               </div>
@@ -139,7 +139,7 @@
                 <label for="reading-value">Aktueller Zählerstand</label>
                 <input
                   id="reading-value"
-                  v-model.number="newReading.zaehlerstand"
+                  v-model.number="newReading.stand"
                   type="number"
                   step="0.01"
                   class="form-control"
@@ -177,7 +177,7 @@
                   <label for="meter-number">Zählernummer</label>
                   <input
                     id="meter-number"
-                    v-model="newMeter.zaehler_nummer"
+                    v-model="newMeter.zaehlernummer"
                     type="text"
                     class="form-control"
                     placeholder="z.B. 12345678"
@@ -189,7 +189,7 @@
                   <label for="meter-category">Kategorie</label>
                   <select
                     id="meter-category"
-                    v-model="newMeter.kategorie"
+                    v-model="newMeter.zaehlertyp"
                     class="form-control"
                     required
                   >
@@ -200,14 +200,37 @@
                 </div>
                 
                 <div class="form-group">
+                  <label for="meter-name">Name/Bezeichnung</label>
+                  <input
+                    id="meter-name"
+                    v-model="newMeter.name"
+                    type="text"
+                    class="form-control"
+                    placeholder="z.B. Hauptzähler Strom"
+                    required
+                  />
+                </div>
+                
+                <div class="form-group">
                   <label for="initial-reading">Startzählerstand</label>
                   <input
                     id="initial-reading"
-                    v-model.number="newMeter.start_zaehlerstand"
+                    v-model="newMeter.initialReading"
                     type="number"
                     step="0.01"
                     class="form-control"
-                    placeholder="0.00"
+                    placeholder="z.B. 12345.67"
+                    required
+                  />
+                </div>
+                
+                <div class="form-group">
+                  <label for="initial-date">Datum des Startzählerstands</label>
+                  <input
+                    id="initial-date"
+                    v-model="newMeter.initialDate"
+                    type="date"
+                    class="form-control"
                     required
                   />
                 </div>
@@ -228,8 +251,8 @@
             <div class="meters-table">
               <div class="table-header">
                 <div class="table-cell">Zählernummer</div>
+                <div class="table-cell">Name</div>
                 <div class="table-cell">Kategorie</div>
-                <div class="table-cell">Startzählerstand</div>
                 <div class="table-cell">Aktionen</div>
               </div>
               
@@ -238,14 +261,12 @@
                 :key="meter.id"
                 class="table-row"
               >
-                <div class="table-cell">{{ meter.zaehler_nummer }}</div>
+                <div class="table-cell">{{ meter.zaehlernummer }}</div>
+                <div class="table-cell">{{ meter.name }}</div>
                 <div class="table-cell">
-                  <span class="category-badge" :class="meter.kategorie">
-                    {{ meter.kategorie }}
+                  <span class="category-badge" :class="meter.zaehlertyp">
+                    {{ meter.zaehlertyp }}
                   </span>
-                </div>
-                <div class="table-cell">
-                  {{ meter.start_zaehlerstand }} {{ meter.kategorie === 'strom' ? 'kWh' : 'm³' }}
                 </div>
                 <div class="table-cell">
                   <button
@@ -299,7 +320,9 @@ const newReading = ref({
 const newMeter = ref({
   zaehlertyp: '',
   zaehlernummer: '',
-  name: ''
+  name: '',
+  initialReading: '',
+  initialDate: new Date().toISOString().split('T')[0]
 })
 
 // Computed
@@ -307,9 +330,10 @@ const latestReadings = computed(() => {
   const latest = {}
   
   for (const reading of readings.value) {
-    const category = reading.kategorie
-    if (!latest[category] || new Date(reading.datum) > new Date(latest[category].datum)) {
-      latest[category] = reading
+    const meter = meters.value.find(m => m.id === reading.zaehler_id)
+    const category = meter?.zaehlertyp
+    if (category && (!latest[category] || new Date(reading.datum) > new Date(latest[category].datum))) {
+      latest[category] = { ...reading, stand: reading.stand }
     }
   }
   
@@ -318,7 +342,14 @@ const latestReadings = computed(() => {
 
 const recentReadings = computed(() => {
   return readings.value
-    .slice()
+    .map(reading => {
+      const meter = meters.value.find(m => m.id === reading.zaehler_id)
+      return {
+        ...reading,
+        zaehler_nummer: meter?.zaehlernummer || 'Unbekannt',
+        kategorie: meter?.zaehlertyp || 'unbekannt'
+      }
+    })
     .sort((a, b) => new Date(b.datum) - new Date(a.datum))
     .slice(0, 5)
 })
@@ -339,11 +370,7 @@ const fetchReadings = async () => {
   try {
     const response = await fetch('/api/zaehlerstaende')
     if (response.ok) {
-      const data = await response.json()
-      readings.value = data.map(reading => ({
-        ...reading,
-        kategorie: meters.value.find(m => m.id === reading.zaehler_id)?.kategorie || 'unknown'
-      }))
+      readings.value = await response.json()
     }
   } catch (error) {
     console.error('Error fetching readings:', error)
@@ -351,24 +378,69 @@ const fetchReadings = async () => {
 }
 
 const addMeter = async () => {
-  if (!newMeter.value.zaehler_nummer || !newMeter.value.kategorie) return
+  if (!newMeter.value.zaehlernummer || !newMeter.value.zaehlertyp || !newMeter.value.name || !newMeter.value.initialReading || !newMeter.value.initialDate) {
+    alert('Bitte füllen Sie alle Pflichtfelder aus')
+    return
+  }
   
   isLoading.value = true
   try {
-    const response = await fetch('/api/zaehler', {
+    console.log('Sending meter data:', newMeter.value)
+    
+    // Zuerst den Zähler erstellen
+    const meterData = {
+      zaehlertyp: newMeter.value.zaehlertyp,
+      zaehlernummer: newMeter.value.zaehlernummer,
+      name: newMeter.value.name
+    }
+    
+    const meterResponse = await fetch('/api/zaehler', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify(newMeter.value)
+      body: JSON.stringify(meterData)
     })
     
-    if (response.ok) {
-      await fetchMeters()
-      resetMeterForm()
+    if (meterResponse.ok) {
+      const meterResult = await meterResponse.json()
+      console.log('Meter added successfully:', meterResult)
+      
+      // Dann den ersten Zählerstand hinzufügen
+      const readingData = {
+        zaehler_id: meterResult.id,
+        datum: newMeter.value.initialDate,
+        stand: parseFloat(newMeter.value.initialReading),
+        bemerkung: 'Startzählerstand'
+      }
+      
+      const readingResponse = await fetch('/api/zaehlerstaende', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(readingData)
+      })
+      
+      if (readingResponse.ok) {
+        console.log('Initial reading added successfully')
+        await fetchMeters()
+        await fetchReadings()
+        resetMeterForm()
+        alert('Zähler und Startzählerstand erfolgreich hinzugefügt!')
+      } else {
+        const readingError = await readingResponse.json()
+        console.error('Error adding initial reading:', readingError)
+        alert(`Zähler wurde erstellt, aber Fehler beim Startzählerstand: ${readingError.error}`)
+      }
+    } else {
+      const errorData = await meterResponse.json()
+      console.error('Server error:', errorData)
+      alert(`Fehler: ${errorData.error}`)
     }
   } catch (error) {
     console.error('Error adding meter:', error)
+    alert('Fehler beim Hinzufügen des Zählers: ' + error.message)
   } finally {
     isLoading.value = false
   }
@@ -395,7 +467,7 @@ const deleteMeter = async (meter) => {
 }
 
 const addReading = async () => {
-  if (!newReading.value.zaehler_id || !newReading.value.zaehlerstand) return
+  if (!newReading.value.zaehler_id || !newReading.value.stand) return
   
   isLoading.value = true
   try {
@@ -411,9 +483,13 @@ const addReading = async () => {
       await fetchReadings()
       resetReadingForm()
       activeView.value = 'overview' // Switch to overview after adding
+    } else {
+      const errorData = await response.json()
+      alert(`Fehler: ${errorData.error}`)
     }
   } catch (error) {
     console.error('Error adding reading:', error)
+    alert('Fehler beim Hinzufügen des Zählerstands')
   } finally {
     isLoading.value = false
   }
@@ -422,9 +498,11 @@ const addReading = async () => {
 // Helper Functions
 const resetMeterForm = () => {
   newMeter.value = {
-    zaehler_nummer: '',
-    kategorie: '',
-    start_zaehlerstand: 0
+    zaehlertyp: '',
+    zaehlernummer: '',
+    name: '',
+    initialReading: '',
+    initialDate: new Date().toISOString().split('T')[0]
   }
 }
 
@@ -432,7 +510,7 @@ const resetReadingForm = () => {
   newReading.value = {
     zaehler_id: '',
     datum: new Date().toISOString().split('T')[0],
-    zaehlerstand: ''
+    stand: ''
   }
 }
 
@@ -811,14 +889,14 @@ onMounted(async () => {
 
 .table-header {
   display: grid;
-  grid-template-columns: 1fr 120px 150px 100px;
+  grid-template-columns: 1fr 1fr 120px 100px;
   background: var(--bg-tertiary);
   border-bottom: 1px solid var(--border-color);
 }
 
 .table-row {
   display: grid;
-  grid-template-columns: 1fr 120px 150px 100px;
+  grid-template-columns: 1fr 1fr 120px 100px;
   border-bottom: 1px solid var(--border-color);
 }
 

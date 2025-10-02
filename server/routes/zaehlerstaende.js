@@ -3,6 +3,19 @@ import { db } from '../database.js';
 
 const router = express.Router();
 
+// Alle Zählerstände abrufen
+router.get('/', async (req, res) => {
+  try {
+    const zaehlerstaende = await db.allAsync(
+      'SELECT * FROM zaehlerstaende ORDER BY datum DESC'
+    );
+    res.json(zaehlerstaende);
+  } catch (error) {
+    console.error('Fehler beim Abrufen der Zählerstände:', error);
+    res.status(500).json({ error: 'Interner Serverfehler' });
+  }
+});
+
 // Alle Zählerstände für einen bestimmten Zähler abrufen
 router.get('/zaehler/:zaehlerId', async (req, res) => {
   try {
