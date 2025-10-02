@@ -17,10 +17,14 @@ Dieses Dokument beschreibt, wie UpDesk auf Docker Hub veröffentlicht wird und w
 | Datei | Beschreibung |
 |-------|--------------|
 | `Dockerfile` | Multi-stage Build mit GitHub/Docker Hub URLs |
-| `docker-compose.yml` | Standard-Compose (lokaler Build) |
+| `docker-compose.yml` | Standard-Compose (lokaler Build) mit Performance-Optimierung |
+| `docker-compose.apache.yml` | Apache-Version (statt nginx) |
 | `docker-compose.github.yml` | Build direkt von GitHub |
 | `docker-compose.hub.yml` | Pull von Docker Hub |
 | `.dockerignore` | Optimiert Image-Größe |
+| `nginx.conf` | Optimierte nginx-Konfiguration mit direktem Static-File-Serving |
+| `apache.conf` | Apache VirtualHost-Konfiguration |
+| `apache-httpd.conf` | Apache Haupt-Konfiguration |
 
 ### 2. Dokumentation
 
@@ -30,6 +34,8 @@ Dieses Dokument beschreibt, wie UpDesk auf Docker Hub veröffentlicht wird und w
 | `DOCKER-SETUP.md` | Detaillierte Docker-Konfiguration |
 | `DOCKER-README.md` | README für Docker Hub |
 | `DOCKER-DEPLOYMENT-GUIDE.md` | Diese Datei |
+| `PERFORMANCE-OPTIMIZATION.md` | Performance-Optimierungen und Benchmarks |
+| `APACHE-MIGRATION.md` | Migration von nginx zu Apache |
 
 ### 3. Automatisierung
 
@@ -241,6 +247,33 @@ git push origin --tags
 - ✅ .dockerignore (reduziert Build-Context)
 - ✅ Layer-Caching (npm ci vor COPY)
 - ✅ Non-root User (Sicherheit)
+- ✅ Shared Volumes für statische Dateien (Performance)
+- ✅ nginx serviert statische Dateien direkt (schneller)
+
+### Performance-Optimierung
+
+**Siehe [PERFORMANCE-OPTIMIZATION.md](PERFORMANCE-OPTIMIZATION.md) für Details**
+
+Die aktuelle Architektur nutzt:
+- nginx/Apache serviert statische Dateien direkt (50-75% schneller)
+- Backend nur für API-Requests
+- Aggressive Browser-Caching (1 Jahr für Assets)
+- Gzip-Kompression
+- HTTP/2 Support
+
+### Webserver-Wahl: nginx vs Apache
+
+**nginx (Standard):**
+- ✅ Sehr schnell für statische Dateien
+- ✅ Niedriger Speicherverbrauch
+- ✅ Einfache Konfiguration
+
+**Apache (Alternative):**
+- ✅ Extrem stabil unter Last
+- ✅ Bewährte Enterprise-Lösung
+- ✅ Umfangreiche Module und Flexibilität
+
+**Siehe [APACHE-MIGRATION.md](APACHE-MIGRATION.md) für Apache-Setup**
 
 ### Sicherheit
 
