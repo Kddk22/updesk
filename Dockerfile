@@ -13,6 +13,9 @@ FROM node:18-alpine AS frontend-builder
 
 WORKDIR /app
 
+# Set Node options for better memory handling in emulated environments
+ENV NODE_OPTIONS="--max-old-space-size=4096"
+
 # Copy package files
 COPY package*.json ./
 

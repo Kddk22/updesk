@@ -59,6 +59,9 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           platforms: linux/amd64,linux/arm64
+          build-args: |
+            BUILDKIT_STEP_LOG_MAX_SIZE=50000000
+            BUILDKIT_STEP_LOG_MAX_SPEED=10000000
 
       - name: Update Docker Hub description
         if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
