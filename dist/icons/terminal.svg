@@ -1,12 +1,9 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
-  <rect x="4" y="8" width="56" height="48" rx="4" fill="#2D3748"/>
-  <rect x="6" y="10" width="52" height="44" rx="2" fill="#1A202C"/>
-  <rect x="8" y="12" width="48" height="4" fill="#4A5568"/>
-  <circle cx="12" cy="14" r="1.5" fill="#F56565"/>
-  <circle cx="16" cy="14" r="1.5" fill="#ED8936"/>
-  <circle cx="20" cy="14" r="1.5" fill="#48BB78"/>
-  <text x="10" y="26" fill="#68D391" font-family="monospace" font-size="8">$</text>
-  <rect x="14" y="22" width="2" height="8" fill="#68D391"/>
-  <text x="10" y="36" fill="#A0AEC0" font-family="monospace" font-size="6">user@desktop:~</text>
-  <text x="10" y="44" fill="#68D391" font-family="monospace" font-size="6">npm start</text>
-</svg>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- Uploaded to: SVG Repo, www.svgrepo.com, Transformed by: SVG Repo Mixer Tools -->
+<svg width="800px" height="800px" viewBox="-2.4 -2.4 28.80 28.80" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="SVGRepo_bgCarrier" stroke-width="0">
+<rect x="-2.4" y="-2.4" width="28.80" height="28.80" rx="5.76" fill="#323232" strokewidth="0"/>
+</g>
+<g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"/>
+<g id="SVGRepo_iconCarrier"> <path d="M12 19H21M3 5L11 12L3 19" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/> </g>
+</svg>

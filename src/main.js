@@ -8,6 +8,7 @@ import Desktop from './views/Desktop.vue'
 import FlowUp from './views/apps/FlowUp.vue'
 import UpSum from './views/apps/UpSum.vue'
 import UpNote from './views/apps/UpNote.vue'
+import PortDocumentation from './views/apps/PortDocumentation.vue'
 
 // Global styles
 import './styles/main.css'
@@ -33,6 +34,11 @@ const routes = [
     path: '/apps/upnote',
     name: 'UpNote',
     component: UpNote
+  },
+  {
+    path: '/apps/portdocumentation',
+    name: 'PortDocumentation',
+    component: PortDocumentation
   }
 ]
 

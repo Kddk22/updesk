@@ -143,6 +143,13 @@ export const initDatabase = async () => {
           position_y: 0
         },
         {
+          name: 'Port Dokumentation',
+          url: '/apps/portdocumentation',
+          icon: '/icons/default-app.svg',
+          position_x: 3,
+          position_y: 0
+        },
+        {
           name: 'Google',
           url: 'https://www.google.com',
           icon: '/icons/google.svg',

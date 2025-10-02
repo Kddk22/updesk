@@ -71,6 +71,7 @@ import ProgramModal from '../components/ProgramModal.vue'
 import ContextMenu from '../components/ContextMenu.vue'
 import SettingsModal from '../components/SettingsModal.vue'
 import FlowUp from './apps/FlowUp.vue'
+import PortDocumentation from './apps/PortDocumentation.vue'
 
 const router = useRouter()
 const programsStore = useProgramsStore()
@@ -108,6 +109,8 @@ const openProgram = (program) => {
   // Check if it's FlowUp app - open as window
   if (program.url === '/apps/upflow') {
     openWindow('FlowUp', FlowUp)
+  } else if (program.url === '/apps/portdocumentation') {
+    openWindow('PortDocumentation', PortDocumentation)
   } else if (program.url.startsWith('/apps/')) {
     // Navigate to other internal apps using Vue Router
     router.push(program.url)
