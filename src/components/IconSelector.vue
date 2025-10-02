@@ -2,23 +2,32 @@
   <div class="icon-selector">
     <h3>Icon auswählen</h3>
     
-    <!-- Category Tabs -->
-    <div class="category-tabs">
-      <button
-        v-for="category in categories"
-        :key="category.key"
-        class="category-tab"
-        :class="{ active: activeCategory === category.key }"
-        @click="activeCategory = category.key"
-      >
-        {{ category.name }}
-      </button>
+    <!-- Search Bar -->
+    <div class="search-bar">
+      <input
+        v-model="searchQuery"
+        type="text"
+        placeholder="Icons durchsuchen..."
+        class="search-input"
+      />
     </div>
     
-    <div class="icon-grid">
+    <!-- Loading State -->
+    <div v-if="loading" class="loading-state">
+      <span>Icons werden geladen...</span>
+    </div>
+    
+    <!-- Error State -->
+    <div v-else-if="error" class="error-state">
+      <span>{{ error }}</span>
+      <button @click="loadIcons" class="retry-button">Erneut versuchen</button>
+    </div>
+    
+    <!-- Icon Grid -->
+    <div v-else class="icon-grid">
       <div
         v-for="icon in filteredIcons"
-        :key="icon.name"
+        :key="icon.filename"
         class="icon-item"
         :class="{ selected: selectedIcon === icon.path }"
         @click="selectIcon(icon.path)"
@@ -26,7 +35,14 @@
         <img :src="icon.path" :alt="icon.name" class="icon-preview" />
         <span class="icon-name">{{ icon.name }}</span>
       </div>
+      
+      <!-- No Results -->
+      <div v-if="filteredIcons.length === 0" class="no-results">
+        <span>Keine Icons gefunden</span>
+      </div>
     </div>
+    
+    <!-- Custom Icon Section -->
     <div class="custom-icon-section">
       <h4>Oder eigene URL eingeben:</h4>
       <input
@@ -41,7 +57,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 
 const props = defineProps({
   modelValue: {
@@ -53,63 +69,56 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue'])
 
 const customIconUrl = ref('')
-const activeCategory = ref('all')
+const searchQuery = ref('')
+const availableIcons = ref([])
+const loading = ref(false)
+const error = ref(null)
 
 const selectedIcon = computed({
   get: () => props.modelValue,
   set: (value) => emit('update:modelValue', value)
 })
 
-const categories = ref([
-  { key: 'all', name: 'Alle' },
-  { key: 'system', name: 'System' },
-  { key: 'selfhosting', name: 'Self-Hosting' },
-  { key: 'storage', name: 'Storage' },
-  { key: 'monitoring', name: 'Monitoring' },
-  { key: 'security', name: 'Security' }
-])
-
-const availableIcons = ref([
-  // System Icons
-  { name: 'Dateien', path: '/icons/files.svg', category: 'system' },
-  { name: 'Standard App', path: '/icons/default-app.svg', category: 'system' },
-  
-  // Self-Hosting & Server Icons
-  { name: 'Docker', path: '/icons/docker.svg', category: 'selfhosting' },
-  { name: 'Portainer', path: '/icons/portainer.svg', category: 'selfhosting' },
-  { name: 'Proxmox', path: '/icons/proxmox.svg', category: 'selfhosting' },
-  { name: 'Home Assistant', path: '/icons/homeassistant.svg', category: 'selfhosting' },
-  { name: 'Nginx', path: '/icons/nginx.svg', category: 'selfhosting' },
-  
-  // Storage
-  { name: 'TrueNAS', path: '/icons/truenas.svg', category: 'storage' },
-  { name: 'Nextcloud', path: '/icons/nextcloud.svg', category: 'storage' },
-  { name: 'Synology', path: '/icons/synology.svg', category: 'storage' },
-  { name: 'Unraid', path: '/icons/unraid.svg', category: 'storage' },
-  
-  // Media & Entertainment
-  { name: 'Plex', path: '/icons/plex.svg', category: 'selfhosting' },
-  { name: 'Jellyfin', path: '/icons/jellyfin.svg', category: 'selfhosting' },
-  
-  // Monitoring
-  { name: 'Grafana', path: '/icons/grafana.svg', category: 'monitoring' },
-  { name: 'Prometheus', path: '/icons/prometheus.svg', category: 'monitoring' },
-  
-  // Security & Network
-  { name: 'Pi-hole', path: '/icons/pihole.svg', category: 'security' },
-  { name: 'Bitwarden', path: '/icons/bitwarden.svg', category: 'security' },
-])
-
 const filteredIcons = computed(() => {
-  if (activeCategory.value === 'all') {
+  if (!searchQuery.value) {
     return availableIcons.value
   }
-  return availableIcons.value.filter(icon => icon.category === activeCategory.value)
+  
+  const query = searchQuery.value.toLowerCase()
+  return availableIcons.value.filter(icon => 
+    icon.name.toLowerCase().includes(query) ||
+    icon.filename.toLowerCase().includes(query)
+  )
 })
+
+const loadIcons = async () => {
+  loading.value = true
+  error.value = null
+  
+  try {
+    const response = await fetch('/api/icons')
+    
+    if (!response.ok) {
+      throw new Error('Fehler beim Laden der Icons')
+    }
+    
+    const icons = await response.json()
+    availableIcons.value = icons
+  } catch (err) {
+    console.error('Error loading icons:', err)
+    error.value = 'Icons konnten nicht geladen werden'
+  } finally {
+    loading.value = false
+  }
+}
 
 const selectIcon = (iconPath) => {
   selectedIcon.value = iconPath
 }
+
+onMounted(() => {
+  loadIcons()
+})
 </script>
 
 <style scoped>
@@ -123,49 +132,74 @@ const selectIcon = (iconPath) => {
   font-size: 1.2rem;
 }
 
-.category-tabs {
-  display: flex;
+/* Search Bar */
+.search-bar {
   margin-bottom: 1rem;
-  border-radius: 6px;
-  overflow: hidden;
+}
+
+.search-input {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
   border: 1px solid var(--border-color);
-  background: var(--bg-tertiary);
-}
-
-.category-tab {
-  flex: 1;
-  padding: 6px 8px;
-  background: transparent;
-  border: none;
-  color: var(--text-secondary);
-  cursor: pointer;
-  transition: all 0.2s ease;
-  font-size: 0.75rem;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.category-tab:hover {
+  border-radius: 6px;
   background: var(--bg-primary);
   color: var(--text-primary);
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
 }
 
-.category-tab.active {
+.search-input:focus {
+  outline: none;
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 2px var(--accent-color-light);
+}
+
+.search-input::placeholder {
+  color: var(--text-secondary);
+  opacity: 0.6;
+}
+
+/* Loading and Error States */
+.loading-state,
+.error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  text-align: center;
+  color: var(--text-secondary);
+  min-height: 200px;
+}
+
+.error-state {
+  color: #e74c3c;
+}
+
+.retry-button {
+  margin-top: 1rem;
+  padding: 0.5rem 1rem;
   background: var(--accent-color);
   color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
 }
 
-.category-tab:not(:last-child) {
-  border-right: 1px solid var(--border-color);
+.retry-button:hover {
+  background: var(--accent-color-dark);
+  transform: translateY(-1px);
 }
 
+/* Icon Grid */
 .icon-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
   gap: 0.5rem;
   margin-bottom: 1.5rem;
-  max-height: 300px;
+  max-height: 350px;
   overflow-y: auto;
   padding: 0.5rem;
   border: 1px solid var(--border-color);
@@ -199,6 +233,7 @@ const selectIcon = (iconPath) => {
   height: 32px;
   margin-bottom: 0.25rem;
   border-radius: 4px;
+  object-fit: contain;
 }
 
 .icon-name {
@@ -206,8 +241,18 @@ const selectIcon = (iconPath) => {
   text-align: center;
   color: var(--text-secondary);
   line-height: 1.2;
+  word-break: break-word;
 }
 
+/* No Results */
+.no-results {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 2rem;
+  color: var(--text-secondary);
+}
+
+/* Custom Icon Section */
 .custom-icon-section {
   border-top: 1px solid var(--border-color);
   padding-top: 1rem;
@@ -227,6 +272,7 @@ const selectIcon = (iconPath) => {
   background: var(--bg-primary);
   color: var(--text-primary);
   font-size: 0.9rem;
+  transition: all 0.2s ease;
 }
 
 .custom-icon-input:focus {
@@ -236,6 +282,11 @@ const selectIcon = (iconPath) => {
 }
 
 /* Dark theme adjustments */
+.dark .search-input {
+  background: var(--bg-secondary);
+  border-color: var(--border-color-dark);
+}
+
 .dark .icon-grid {
   background: var(--bg-tertiary);
 }
@@ -249,7 +300,8 @@ const selectIcon = (iconPath) => {
   border-color: var(--border-color-dark);
 }
 
-.dark .custom-icon-input:focus {
+.dark .custom-icon-input:focus,
+.dark .search-input:focus {
   border-color: var(--accent-color);
 }
 </style>

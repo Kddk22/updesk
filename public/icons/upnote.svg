@@ -1,11 +1,12 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg width="24px" height="24px" viewBox="0 0 24 24" version="1.1" xmlns="http://www.w3.org/2000/svg">
-    <title>UpNote</title>
-    <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-        <rect fill="#FBBC05" x="0" y="0" width="24" height="24" rx="4"></rect>
-        <path d="M4,4 L20,4 L20,20 L4,20 L4,4 Z" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
-        <path d="M8,8 L16,8" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round"></path>
-        <path d="M8,12 L16,12" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round"></path>
-        <path d="M8,16 L12,16" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round"></path>
-    </g>
-</svg>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- Uploaded to: SVG Repo, www.svgrepo.com, Transformed by: SVG Repo Mixer Tools -->
+<svg fill="#000000" width="800px" height="800px" viewBox="-2.4 -2.4 28.80 28.80" id="note-alt" data-name="Flat Color" xmlns="http://www.w3.org/2000/svg" class="icon flat-color">
+<g id="SVGRepo_bgCarrier" stroke-width="0">
+<rect x="-2.4" y="-2.4" width="28.80" height="28.80" rx="5.76" fill="#ffffff" strokewidth="0"/>
+</g>
+<g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"/>
+<g id="SVGRepo_iconCarrier">
+<rect id="primary" x="4" y="3" width="16" height="19" rx="2" style="fill: #5e5e5e;"/>
+<path id="secondary" d="M16,3V5a1,1,0,0,1-1,1H9A1,1,0,0,1,8,5V3A1,1,0,0,1,9,2h6A1,1,0,0,1,16,3Zm0,8a1,1,0,0,0-1-1H9a1,1,0,0,0,0,2h6A1,1,0,0,0,16,11Zm0,4a1,1,0,0,0-1-1H9a1,1,0,0,0,0,2h6A1,1,0,0,0,16,15Z" style="fill: #ff9238;"/>
+</g>
+</svg>

@@ -31,7 +31,7 @@ services:
     networks:
       - updesk_network
 
-  # Optional: Nginx reverse proxy for production
+  # Nginx reverse proxy for HTTP and HTTPS
   nginx:
     image: nginx:alpine
     container_name: updesk-nginx
@@ -46,8 +46,6 @@ services:
     restart: unless-stopped
     networks:
       - updesk_network
-    profiles:
-      - production
 
 volumes:
   updesk_data:

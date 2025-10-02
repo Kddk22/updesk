@@ -119,3 +119,9 @@ coverage/
 
 # Vue.js specific
 .vite/
+
+# SSL certificates and private keys
+ssl/*.pem
+ssl/*.key
+ssl/*.crt
+ssl/*.csr
