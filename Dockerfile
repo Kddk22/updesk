@@ -1,4 +1,12 @@
 # Multi-stage build for production optimization
+# GitHub Repository: https://github.com/uptec-ps/updesk
+# Docker Hub: uptecps/updesk
+# 
+# Build from GitHub:
+#   docker build -t updesk https://github.com/uptec-ps/updesk.git
+#
+# Pull from Docker Hub:
+#   docker pull uptecps/updesk:latest
 
 # Stage 1: Build the Vue.js frontend
 FROM node:18-alpine AS frontend-builder

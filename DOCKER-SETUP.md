@@ -2,34 +2,77 @@
 
 Diese Anleitung beschreibt, wie Sie UpDesk mit Docker auf Port 80 (HTTP) und Port 443 (HTTPS) betreiben.
 
+**GitHub Repository:** https://github.com/uptec-ps/updesk  
+**Docker Hub:** https://hub.docker.com/r/uptecps/updesk
+
+> 💡 **Für eine einfache Schnellinstallation siehe [INSTALL.md](INSTALL.md)**
+
 ## Voraussetzungen
 
 - Docker (Version 20.10 oder höher)
 - Docker Compose (Version 2.0 oder höher)
 - Ports 80 und 443 müssen verfügbar sein
 
-## Schnellstart
+## Installationsmethoden
 
-### 1. SSL-Zertifikate generieren
+### Methode 1: Docker Hub (Empfohlen)
 
-Für Entwicklung/Testing werden selbstsignierte Zertifikate verwendet:
+Verwende das fertige Image von Docker Hub:
 
 ```bash
+# Benötigte Dateien herunterladen
+curl -O https://raw.githubusercontent.com/uptec-ps/updesk/main/docker-compose.hub.yml
+curl -O https://raw.githubusercontent.com/uptec-ps/updesk/main/nginx.conf
+curl -O https://raw.githubusercontent.com/uptec-ps/updesk/main/generate-ssl-certs.sh
+chmod +x generate-ssl-certs.sh
+
+# SSL-Zertifikate generieren
 ./generate-ssl-certs.sh
+
+# Starten
+docker-compose -f docker-compose.hub.yml up -d
 ```
 
-**Hinweis:** Browser zeigen eine Sicherheitswarnung bei selbstsignierten Zertifikaten. Dies ist normal für Entwicklungsumgebungen.
+### Methode 2: Direkt von GitHub bauen
 
-### 2. Docker Container starten
+Baue das Image direkt aus dem Repository:
 
 ```bash
+# Benötigte Dateien herunterladen
+curl -O https://raw.githubusercontent.com/uptec-ps/updesk/main/docker-compose.github.yml
+curl -O https://raw.githubusercontent.com/uptec-ps/updesk/main/nginx.conf
+curl -O https://raw.githubusercontent.com/uptec-ps/updesk/main/generate-ssl-certs.sh
+chmod +x generate-ssl-certs.sh
+
+# SSL-Zertifikate generieren
+./generate-ssl-certs.sh
+
+# Starten (baut automatisch von GitHub)
+docker-compose -f docker-compose.github.yml up -d
+```
+
+### Methode 3: Lokaler Build (Entwicklung)
+
+Für Entwickler mit geklontem Repository:
+
+```bash
+# Repository klonen
+git clone https://github.com/uptec-ps/updesk.git
+cd updesk
+
+# SSL-Zertifikate generieren
+./generate-ssl-certs.sh
+
+# Starten
 docker-compose up -d
 ```
 
-### 3. Anwendung aufrufen
+### Anwendung aufrufen
 
 - **HTTP:** http://localhost
 - **HTTPS:** https://localhost
+
+**Hinweis:** Browser zeigen eine Sicherheitswarnung bei selbstsignierten Zertifikaten. Dies ist normal für Entwicklungsumgebungen.
 
 ## Architektur
 

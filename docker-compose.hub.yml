@@ -1,19 +1,12 @@
 version: '3.8'
 
-# UpDesk Virtual Desktop Launcher
-# GitHub: https://github.com/uptec-ps/updesk
-# Docker Hub: uptecps/updesk
+# UpDesk - Installation von Docker Hub
+# Verwendung: docker-compose -f docker-compose.hub.yml up -d
 
 services:
   updesk:
-    # Build from local source (for development)
-    build:
-      context: .
-      dockerfile: Dockerfile
-    # Alternative: Build directly from GitHub (uncomment to use)
-    # build: https://github.com/uptec-ps/updesk.git
-    # Alternative: Use pre-built image from Docker Hub (uncomment to use)
-    # image: uptecps/updesk:latest
+    # Use pre-built image from Docker Hub
+    image: uptecps/updesk:latest
     container_name: updesk-app
     ports:
       - "3001:3001"
@@ -23,10 +16,10 @@ services:
     volumes:
       # Persist SQLite database
       - updesk_data:/app/data
-      # Optional: Mount custom wallpapers
-      - ./public/wallpapers:/app/public/wallpapers:ro
-      # Optional: Mount custom icons
-      - ./public/icons:/app/public/icons:ro
+      # Optional: Mount custom wallpapers (create folder first)
+      # - ./wallpapers:/app/public/wallpapers:ro
+      # Optional: Mount custom icons (create folder first)
+      # - ./icons:/app/public/icons:ro
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "node", "-e", "require('http').get('http://localhost:3001/api/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"]
@@ -37,6 +30,7 @@ services:
     labels:
       - "com.updesk.description=UpDesk Virtual Desktop Launcher"
       - "com.updesk.version=1.0.0"
+      - "com.updesk.source=dockerhub"
     networks:
       - updesk_network
 
