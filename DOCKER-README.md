@@ -11,19 +11,15 @@ Modern Virtual Desktop Launcher with Ubuntu-style Taskbar, built with Vue.js and
 ### Using Docker Compose (Recommended)
 
 ```bash
-# Download docker-compose file
-curl -O https://raw.githubusercontent.com/uptec-ps/updesk/main/docker-compose.hub.yml
-
-# Download nginx config and SSL script
-curl -O https://raw.githubusercontent.com/uptec-ps/updesk/main/nginx.conf
-curl -O https://raw.githubusercontent.com/uptec-ps/updesk/main/generate-ssl-certs.sh
-chmod +x generate-ssl-certs.sh
+# Clone repository or download files
+git clone https://github.com/uptec-ps/updesk.git
+cd updesk
 
 # Generate SSL certificates
 ./generate-ssl-certs.sh
 
 # Start UpDesk
-docker-compose -f docker-compose.hub.yml up -d
+docker-compose up -d
 ```
 
 Access at:
@@ -33,23 +29,23 @@ Access at:
 ### Using Docker Run
 
 ```bash
-# Run UpDesk backend only (Port 3001)
+# Run UpDesk backend only (Port 5002)
 docker run -d \
-  --name updesk \
-  -p 3001:3001 \
+  --name updesk-backend \
+  -p 5002:5002 \
   -v updesk_data:/app/data \
   -e NODE_ENV=production \
   uptecps/updesk:latest
 ```
 
-Access at: http://localhost:3001
+Access at: http://localhost:5002
 
 ## 📋 Features
 
 - 🖥️ **Virtual Desktop Environment** - Ubuntu-inspired desktop interface
 - 📊 **Integrated Apps** - FlowUp, Port Documentation, UpNote, UpSum
 - 🎨 **Customizable** - Themes, wallpapers, and layouts
-- 🔒 **Secure** - HTTPS support with Nginx reverse proxy
+- 🔒 **Secure** - HTTPS support with Apache reverse proxy
 - 💾 **Persistent Storage** - SQLite database with Docker volumes
 - 🚀 **Production Ready** - Optimized multi-stage Docker build
 
@@ -58,8 +54,8 @@ Access at: http://localhost:3001
 - **Frontend:** Vue.js 3 with Vite
 - **Backend:** Node.js with Express
 - **Database:** SQLite
-- **Reverse Proxy:** Nginx (optional)
-- **Ports:** 3001 (backend), 80 (HTTP), 443 (HTTPS)
+- **Reverse Proxy:** Apache HTTP Server 2.4
+- **Ports:** 5002 (backend), 80 (HTTP), 443 (HTTPS)
 
 ## 📦 Volumes
 
@@ -86,29 +82,29 @@ certbot certonly --standalone -d your-domain.com
 cp /etc/letsencrypt/live/your-domain.com/fullchain.pem ./ssl/cert.pem
 cp /etc/letsencrypt/live/your-domain.com/privkey.pem ./ssl/key.pem
 
-# Update nginx.conf with your domain
+# Update apache.conf with your domain
 # Start with docker-compose
-docker-compose -f docker-compose.hub.yml up -d
+docker-compose up -d
 ```
 
 ## 📊 Health Check
 
 ```bash
 # Check application health
-curl http://localhost:3001/api/health
+curl http://localhost:5002/api/health
 
 # With HTTPS
-curl -k https://localhost/health
+curl -k https://localhost/api/health
 ```
 
 ## 🔄 Updates
 
 ```bash
 # Pull latest version
-docker-compose -f docker-compose.hub.yml pull
+docker-compose pull
 
 # Restart with new version
-docker-compose -f docker-compose.hub.yml up -d
+docker-compose up -d
 ```
 
 ## 🐛 Troubleshooting
@@ -127,32 +123,35 @@ sudo systemctl stop nginx
 ### View logs
 ```bash
 # All logs
-docker-compose -f docker-compose.hub.yml logs -f
+docker-compose logs -f
 
-# UpDesk only
-docker logs -f updesk
+# Backend only
+docker logs -f updesk-backend
+
+# Apache only
+docker logs -f updesk-app
 ```
 
 ### Reset database
 ```bash
 # Backup first
-docker cp updesk:/app/data/database.db ./backup.db
+docker cp updesk-backend:/app/data/updesk.db ./backup.db
 
 # Remove volume
-docker-compose -f docker-compose.hub.yml down -v
-docker-compose -f docker-compose.hub.yml up -d
+docker-compose down -v
+docker-compose up -d
 ```
 
 ## 📚 Documentation
 
 - **GitHub:** https://github.com/uptec-ps/updesk
 - **Installation Guide:** [INSTALL.md](https://github.com/uptec-ps/updesk/blob/main/INSTALL.md)
-- **Docker Setup:** [DOCKER-SETUP.md](https://github.com/uptec-ps/updesk/blob/main/DOCKER-SETUP.md)
+- **Migration Guide:** [MIGRATION-TO-APACHE.md](https://github.com/uptec-ps/updesk/blob/main/MIGRATION-TO-APACHE.md)
 
 ## 🏷️ Tags
 
-- `latest` - Latest stable release
-- `v1.x.x` - Specific version
+- `latest` - Latest stable release (Apache-based)
+- `v2.x.x` - Version 2.0+ with Apache
 - `main` - Latest from main branch
 
 ## 💡 Examples
@@ -161,7 +160,7 @@ docker-compose -f docker-compose.hub.yml up -d
 ```bash
 mkdir wallpapers
 cp my-image.jpg wallpapers/
-docker run -d -p 3001:3001 \
+docker run -d -p 5002:5002 \
   -v updesk_data:/app/data \
   -v ./wallpapers:/app/public/wallpapers:ro \
   uptecps/updesk:latest
@@ -169,27 +168,28 @@ docker run -d -p 3001:3001 \
 
 ### With environment variables
 ```bash
-docker run -d -p 3001:3001 \
+docker run -d -p 5002:5002 \
   -v updesk_data:/app/data \
   -e NODE_ENV=production \
-  -e PORT=3001 \
+  -e PORT=5002 \
   uptecps/updesk:latest
 ```
 
 ### Behind reverse proxy
 ```bash
 # UpDesk backend
-docker run -d --name updesk \
+docker run -d --name updesk-backend \
   --network my-network \
   -v updesk_data:/app/data \
   uptecps/updesk:latest
 
-# Nginx proxy
-docker run -d --name nginx \
+# Apache proxy
+docker run -d --name updesk-app \
   --network my-network \
   -p 80:80 -p 443:443 \
-  -v ./nginx.conf:/etc/nginx/nginx.conf:ro \
-  nginx:alpine
+  -v ./apache.conf:/usr/local/apache2/conf/extra/httpd-vhosts.conf:ro \
+  -v ./apache-httpd.conf:/usr/local/apache2/conf/httpd.conf:ro \
+  httpd:2.4-alpine
 ```
 
 ## 📄 License
