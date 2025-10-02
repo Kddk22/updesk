@@ -32,7 +32,15 @@
             required
             placeholder="https://example.com"
             class="form-input"
+            :disabled="isIntegratedApp"
+            :class="{ 'input-disabled': isIntegratedApp }"
           />
+          <div v-if="isIntegratedApp" class="info-message">
+            <svg viewBox="0 0 24 24" fill="currentColor" class="info-icon">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
+            </svg>
+            <span>Dies ist eine integrierte App. Die URL kann nicht geändert werden.</span>
+          </div>
         </div>
         
         <div class="form-group">
@@ -140,6 +148,10 @@ const formData = ref({
 })
 
 const isEditing = computed(() => !!props.program?.id)
+
+const isIntegratedApp = computed(() => {
+  return formData.value.url.startsWith('/apps/')
+})
 
 const isFormValid = computed(() => {
   return formData.value.name.trim() && formData.value.url.trim()
@@ -298,6 +310,36 @@ watch(() => props.program, (newProgram) => {
   outline: none;
   border-color: var(--accent);
   box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
+}
+
+.form-input:disabled,
+.input-disabled {
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.info-message {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 8px;
+  padding: 10px 12px;
+  background: rgba(255, 193, 7, 0.1);
+  border: 1px solid rgba(255, 193, 7, 0.3);
+  border-radius: 6px;
+  color: var(--text-primary);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.info-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  color: rgba(255, 193, 7, 0.9);
+  margin-top: 1px;
 }
 
 .icon-preview {
