@@ -2,6 +2,8 @@
 
 A modern, Ubuntu-inspired virtual desktop application built with Vue.js 3 and deployed with Docker.
 
+![Desktop](https://raw.githubusercontent.com/uptec-ps/updesk/refs/heads/main/doc/img/updesk-desktop.png)
+
 ## Features
 
 - **Desktop Interface**: Ubuntu/Gnome-inspired design with top bar, dock, and grid layout
