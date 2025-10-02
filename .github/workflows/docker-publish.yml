@@ -117,26 +117,31 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Extract metadata
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.DOCKER_USERNAME }}/${{ env.IMAGE_NAME }}
-          tags: |
-            type=ref,event=branch
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=semver,pattern={{major}}
-            type=raw,value=latest,enable={{is_default_branch}}
-
-      - name: Create and push manifest
+      - name: Determine source tags
+        id: source-tags
         run: |
-          TAGS="${{ steps.meta.outputs.tags }}"
-          for TAG in $TAGS; do
-            docker buildx imagetools create -t $TAG \
-              ${TAG}-amd64 \
-              ${TAG}-arm64
-          done
+          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            VERSION=${GITHUB_REF#refs/tags/v}
+            echo "SOURCE_TAG=${VERSION}" >> $GITHUB_OUTPUT
+          else
+            BRANCH=${GITHUB_REF#refs/heads/}
+            echo "SOURCE_TAG=${BRANCH}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create and push manifest for branch/tag
+        run: |
+          SOURCE_TAG="${{ steps.source-tags.outputs.SOURCE_TAG }}"
+          docker buildx imagetools create -t ${{ env.DOCKER_USERNAME }}/${{ env.IMAGE_NAME }}:${SOURCE_TAG} \
+            ${{ env.DOCKER_USERNAME }}/${{ env.IMAGE_NAME }}:${SOURCE_TAG}-amd64 \
+            ${{ env.DOCKER_USERNAME }}/${{ env.IMAGE_NAME }}:${SOURCE_TAG}-arm64
+
+      - name: Create and push latest manifest
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+        run: |
+          SOURCE_TAG="${{ steps.source-tags.outputs.SOURCE_TAG }}"
+          docker buildx imagetools create -t ${{ env.DOCKER_USERNAME }}/${{ env.IMAGE_NAME }}:latest \
+            ${{ env.DOCKER_USERNAME }}/${{ env.IMAGE_NAME }}:${SOURCE_TAG}-amd64 \
+            ${{ env.DOCKER_USERNAME }}/${{ env.IMAGE_NAME }}:${SOURCE_TAG}-arm64
 
   update-description:
     needs: [create-manifest]
