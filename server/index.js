@@ -19,8 +19,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const app = express();
-const PORT = process.env.PORT || 3001;
-const NODE_ENV = process.env.NODE_ENV || 'development';
+const PORT = process.env.PORT || 5002;
+const NODE_ENV = process.env.NODE_ENV || 'production';
 
 // Security middleware
 app.use(helmet({

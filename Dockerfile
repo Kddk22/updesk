@@ -36,6 +36,10 @@ RUN npm run build || (echo "Build failed, retrying with verbose output..." && np
 # Stage 2: Setup the production server
 FROM node:18-alpine AS production
 
+# Set production environment
+ENV NODE_ENV=production
+ENV PORT=5002
+
 # Install dumb-init and build dependencies for native modules
 RUN apk add --no-cache dumb-init python3 make g++
 
@@ -77,11 +81,11 @@ RUN chmod +x ./update.sh
 USER updesk
 
 # Expose port
-EXPOSE 3001
+EXPOSE 5002
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:3001/api/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"
+  CMD node -e "require('http').get('http://localhost:5002/api/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"
 
 # Use dumb-init to handle signals properly
 ENTRYPOINT ["dumb-init", "--"]
