@@ -14,7 +14,7 @@ on:
   workflow_dispatch:
 
 env:
-  DOCKER_USERNAME: updesk
+  DOCKER_USERNAME: uptecps
   IMAGE_NAME: updesk
 
 jobs:
