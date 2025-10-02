@@ -6,15 +6,20 @@ version: '3.8'
 
 services:
   updesk:
-    # Build from local source (for development)
+    # === BUILD OPTIONS (uncomment one) ===
+    
+    # Option 1: Build from local source (for development)
     build:
       context: .
       dockerfile: Dockerfile
-    # Alternative: Build directly from GitHub (uncomment to use)
+    
+    # Option 2: Build directly from GitHub (uncomment to use)
     # build: https://github.com/uptec-ps/updesk.git
-    # Alternative: Use pre-built image from Docker Hub (uncomment to use)
+    
+    # Option 3: Use pre-built image from Docker Hub (uncomment to use)
     # image: uptecps/updesk:latest
-    container_name: updesk-app
+    
+    container_name: updesk-backend
     ports:
       - "5002:5002"
     environment:
@@ -23,7 +28,7 @@ services:
     volumes:
       # Persist SQLite database
       - updesk_data:/app/data
-      # Share static files with nginx
+      # Share static files with Apache
       - updesk_static:/app/dist
       # Optional: Mount custom wallpapers
       - ./public/wallpapers:/app/public/wallpapers:ro
@@ -42,23 +47,26 @@ services:
     networks:
       - updesk_network
 
-  # Nginx reverse proxy for HTTP and HTTPS
-  nginx:
-    image: nginx:alpine
-    container_name: updesk-nginx
+  # Apache reverse proxy for HTTP and HTTPS
+  apache:
+    image: httpd:2.4-alpine
+    container_name: updesk-app
     ports:
       - "80:80"
       - "443:443"
     volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./ssl:/etc/nginx/ssl:ro
+      - ./apache.conf:/usr/local/apache2/conf/extra/updesk.conf:ro
+      - ./apache-httpd.conf:/usr/local/apache2/conf/httpd.conf:ro
+      - ./ssl:/usr/local/apache2/ssl:ro
       # Mount static files from updesk container for direct serving
-      - updesk_static:/usr/share/nginx/html:ro
+      - updesk_static:/usr/local/apache2/htdocs:ro
     depends_on:
       - updesk
     restart: unless-stopped
     networks:
       - updesk_network
+    labels:
+      - "com.updesk.description=Apache reverse proxy for UpDesk"
 
 volumes:
   updesk_data:

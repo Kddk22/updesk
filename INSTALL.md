@@ -1,101 +1,92 @@
 # UpDesk Installation Guide
 
-Drei einfache Wege, UpDesk zu installieren und zu starten.
+## 🚀 Quick Start
 
-## 🚀 Schnellinstallation
+### Voraussetzungen
+- Docker und Docker Compose installiert
+- Git (optional, für lokalen Build)
 
-### Option 1: Docker Hub (Empfohlen - Am schnellsten)
+### Installation
 
-Verwende das fertige Image von Docker Hub:
-
-```bash
-# 1. Benötigte Dateien herunterladen
-mkdir updesk && cd updesk
-curl -O https://raw.githubusercontent.com/uptec-ps/updesk/main/docker-compose.hub.yml
-curl -O https://raw.githubusercontent.com/uptec-ps/updesk/main/nginx.conf
-curl -O https://raw.githubusercontent.com/uptec-ps/updesk/main/generate-ssl-certs.sh
-chmod +x generate-ssl-certs.sh
-
-# 2. SSL-Zertifikate generieren
-./generate-ssl-certs.sh
-
-# 3. Starten
-docker-compose -f docker-compose.hub.yml up -d
-```
-
-**Fertig!** UpDesk läuft jetzt auf:
-- HTTP: http://localhost
-- HTTPS: https://localhost
-
----
-
-### Option 2: Direkt von GitHub bauen
-
-Baue das Image direkt aus dem GitHub Repository:
+#### Option 1: Lokaler Build (Empfohlen für Entwicklung)
 
 ```bash
-# 1. Benötigte Dateien herunterladen
-mkdir updesk && cd updesk
-curl -O https://raw.githubusercontent.com/uptec-ps/updesk/main/docker-compose.github.yml
-curl -O https://raw.githubusercontent.com/uptec-ps/updesk/main/nginx.conf
-curl -O https://raw.githubusercontent.com/uptec-ps/updesk/main/generate-ssl-certs.sh
-chmod +x generate-ssl-certs.sh
-
-# 2. SSL-Zertifikate generieren
-./generate-ssl-certs.sh
-
-# 3. Starten (baut automatisch von GitHub)
-docker-compose -f docker-compose.github.yml up -d
-```
-
----
-
-### Option 3: Repository klonen (Für Entwickler)
-
-Klone das komplette Repository für Entwicklung:
-
-```bash
-# 1. Repository klonen
+# Repository klonen
 git clone https://github.com/uptec-ps/updesk.git
 cd updesk
 
-# 2. SSL-Zertifikate generieren
+# SSL-Zertifikate generieren
 ./generate-ssl-certs.sh
 
-# 3. Starten
+# Starten
 docker-compose up -d
 ```
 
----
+#### Option 2: Build von GitHub
 
-## 📋 Voraussetzungen
-
-- Docker (Version 20.10+)
-- Docker Compose (Version 2.0+)
-- Ports 80 und 443 verfügbar
-
-### Docker installieren (falls nicht vorhanden)
-
-**Ubuntu/Debian:**
 ```bash
-curl -fsSL https://get.docker.com -o get-docker.sh
-sudo sh get-docker.sh
-sudo usermod -aG docker $USER
+# docker-compose.yml bearbeiten und diese Zeilen auskommentieren:
+# build:
+#   context: .
+#   dockerfile: Dockerfile
+
+# Und diese Zeile aktivieren:
+# build: https://github.com/uptec-ps/updesk.git
+
+# Dann starten:
+docker-compose up -d
 ```
 
-**macOS:**
+#### Option 3: Docker Hub Image
+
 ```bash
-brew install --cask docker
+# docker-compose.yml bearbeiten und diese Zeilen auskommentieren:
+# build:
+#   context: .
+#   dockerfile: Dockerfile
+
+# Und diese Zeile aktivieren:
+# image: uptecps/updesk:latest
+
+# Dann starten:
+docker-compose up -d
 ```
 
-**Windows:**
-Lade [Docker Desktop](https://www.docker.com/products/docker-desktop) herunter.
+## 🌐 Zugriff
 
----
+Nach dem Start ist UpDesk erreichbar unter:
+- **HTTP**: http://localhost
+- **HTTPS**: https://localhost
 
-## 🔧 Verwaltung
+## 🔧 Konfiguration
 
-### Status prüfen
+### Ports ändern
+
+Bearbeiten Sie `docker-compose.yml`:
+
+```yaml
+apache:
+  ports:
+    - "8080:80"    # HTTP auf Port 8080
+    - "8443:443"   # HTTPS auf Port 8443
+```
+
+### Eigene Wallpapers/Icons
+
+```bash
+# Wallpapers hinzufügen
+cp mein-wallpaper.jpg public/wallpapers/
+
+# Icons hinzufügen
+cp mein-icon.svg public/icons/
+
+# Container neu starten
+docker-compose restart
+```
+
+## 📊 Verwaltung
+
+### Container Status prüfen
 ```bash
 docker-compose ps
 ```
@@ -110,97 +101,122 @@ docker-compose logs -f
 docker-compose down
 ```
 
-### Neustarten
+### Neu starten
 ```bash
 docker-compose restart
 ```
 
-### Update auf neue Version
+### Update durchführen
+
+**Lokaler Build:**
+```bash
+git pull
+docker-compose build --no-cache
+docker-compose up -d
+```
 
 **Docker Hub:**
 ```bash
-docker-compose -f docker-compose.hub.yml pull
-docker-compose -f docker-compose.hub.yml up -d
+docker-compose pull
+docker-compose up -d
 ```
 
-**GitHub:**
-```bash
-docker-compose -f docker-compose.github.yml build --no-cache
-docker-compose -f docker-compose.github.yml up -d
-```
-
----
-
-## 🔒 Produktion
-
-Für Produktionsumgebungen siehe [DOCKER-SETUP.md](DOCKER-SETUP.md) für:
-- Let's Encrypt SSL-Zertifikate
-- Domain-Konfiguration
-- Sicherheits-Best-Practices
-- Performance-Optimierung
-
----
-
-## 🐛 Fehlerbehebung
+## 🔍 Troubleshooting
 
 ### Port bereits belegt
 ```bash
-# Prüfen, welcher Prozess Port 80/443 verwendet
+# Prüfen, welcher Prozess Port 80 nutzt
 sudo lsof -i :80
-sudo lsof -i :443
 
-# Andere Webserver stoppen
-sudo systemctl stop apache2
-sudo systemctl stop nginx
+# Andere Ports in docker-compose.yml verwenden
 ```
 
 ### Container startet nicht
 ```bash
 # Logs prüfen
 docker-compose logs updesk
+docker-compose logs apache
 
 # Container neu bauen
+docker-compose down
 docker-compose build --no-cache
 docker-compose up -d
 ```
 
-### SSL-Zertifikat-Fehler
+### SSL-Zertifikat Fehler
 ```bash
-# Zertifikate neu generieren
-rm -rf ssl/*.pem
+# Neue Zertifikate generieren
 ./generate-ssl-certs.sh
-docker-compose restart nginx
+
+# Container neu starten
+docker-compose restart apache
 ```
+
+### Datenbank zurücksetzen
+```bash
+# WARNUNG: Löscht alle Daten!
+docker-compose down -v
+docker-compose up -d
+```
+
+## 📁 Daten-Persistenz
+
+Alle Daten werden in Docker Volumes gespeichert:
+- `updesk_data`: SQLite Datenbank
+- `updesk_static`: Statische Frontend-Dateien
+
+### Backup erstellen
+```bash
+# Datenbank sichern
+docker cp updesk-app:/app/data/updesk.db ./backup-updesk.db
+```
+
+### Backup wiederherstellen
+```bash
+# Datenbank wiederherstellen
+docker cp ./backup-updesk.db updesk-app:/app/data/updesk.db
+docker-compose restart updesk
+```
+
+## 🔒 Sicherheit
+
+### Produktions-Deployment
+
+1. **Echte SSL-Zertifikate verwenden** (z.B. Let's Encrypt)
+2. **Firewall konfigurieren**
+3. **Regelmäßige Updates durchführen**
+4. **Backups automatisieren**
+
+### Let's Encrypt Integration
+
+```bash
+# Certbot installieren
+sudo apt install certbot
+
+# Zertifikat erstellen
+sudo certbot certonly --standalone -d ihre-domain.de
+
+# Zertifikate in docker-compose.yml einbinden
+# - /etc/letsencrypt/live/ihre-domain.de/fullchain.pem:/usr/local/apache2/ssl/cert.pem:ro
+# - /etc/letsencrypt/live/ihre-domain.de/privkey.pem:/usr/local/apache2/ssl/key.pem:ro
+```
+
+## 📞 Support
+
+- **GitHub Issues**: https://github.com/uptec-ps/updesk/issues
+- **Dokumentation**: [README.md](README.md)
+- **Docker Hub**: https://hub.docker.com/r/uptecps/updesk
+
+## ✅ Checkliste
+
+- [ ] Docker und Docker Compose installiert
+- [ ] Repository geklont oder docker-compose.yml heruntergeladen
+- [ ] SSL-Zertifikate generiert
+- [ ] `docker-compose up -d` ausgeführt
+- [ ] http://localhost im Browser geöffnet
+- [ ] Funktionalität getestet
+- [ ] Backup-Strategie geplant
 
 ---
 
-## 📚 Weitere Dokumentation
-
-- [Docker Setup Details](DOCKER-SETUP.md)
-- [GitHub Repository](https://github.com/uptec-ps/updesk)
-- [Docker Hub](https://hub.docker.com/r/uptecps/updesk)
-
----
-
-## 💡 Tipps
-
-**Nur Backend ohne Nginx:**
-```bash
-# Nur UpDesk auf Port 3001
-docker run -d -p 3001:3001 -v updesk_data:/app/data uptecps/updesk:latest
-```
-
-**Eigene Hintergrundbilder:**
-```bash
-# Erstelle Ordner und mounte ihn
-mkdir wallpapers
-# Füge deine Bilder hinzu
-cp mein-bild.jpg wallpapers/
-# Starte mit Volume-Mount (siehe docker-compose.yml)
-```
-
-**Datenbank-Backup:**
-```bash
-docker-compose exec updesk cp /app/data/database.db /app/data/backup.db
-docker cp updesk-app:/app/data/backup.db ./backup.db
-```
+**Viel Erfolg mit UpDesk! 🎉**

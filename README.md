@@ -20,7 +20,7 @@ A modern, Ubuntu-inspired virtual desktop application built with Vue.js 3 and de
 - **Backend**: Node.js/Express API
 - **Database**: SQLite with automatic initialization
 - **Deployment**: Docker with multi-stage builds
-- **Reverse Proxy**: Nginx (optional)
+- **Reverse Proxy**: Apache HTTP Server
 
 ## Quick Start
 
@@ -37,7 +37,7 @@ cd UpDesk
 docker-compose up -d
 ```
 
-3. Open your browser and navigate to `http://localhost:3000`
+3. Open your browser and navigate to `http://localhost`
 
 ### Development Mode
 
@@ -63,15 +63,21 @@ npm run server
 ### Production Build
 The application uses a multi-stage Docker build:
 - **Build Stage**: Compiles Vue.js application
-- **Production Stage**: Serves with Nginx for optimal performance
+- **Production Stage**: Serves with Apache HTTP Server for optimal performance and stability
 
 ### Environment Variables
 - `NODE_ENV`: Set to 'production' for production builds
-- `PORT`: API server port (default: 3001)
+- `PORT`: API server port (default: 5002)
 
 ### Docker Compose Services
-- **app**: Main application container
-- **nginx**: Reverse proxy (optional, uncomment in docker-compose.yml)
+- **updesk**: Main application container
+- **apache**: Apache reverse proxy with HTTP/2 and SSL support
+
+### Build Options
+You can choose between three build methods in `docker-compose.yml`:
+1. **Local Build**: Build from local source (default, for development)
+2. **GitHub Build**: Build directly from GitHub repository
+3. **Docker Hub**: Use pre-built image from Docker Hub
 
 ## API Endpoints
 
@@ -126,7 +132,8 @@ UpDesk/
 │   └── database.js       # Database configuration
 ├── Dockerfile            # Multi-stage Docker build
 ├── docker-compose.yml    # Docker Compose configuration
-└── nginx.conf           # Nginx configuration
+├── apache.conf           # Apache VirtualHost configuration
+└── apache-httpd.conf     # Apache main configuration
 ```
 
 ## Customization
