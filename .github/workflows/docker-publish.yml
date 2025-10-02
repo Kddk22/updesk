@@ -102,6 +102,8 @@ jobs:
           cache-from: type=gha,scope=arm64
           cache-to: type=gha,mode=max,scope=arm64
           platforms: linux/arm64
+          build-args: |
+            NODE_OPTIONS=--max-old-space-size=2048
 
   create-manifest:
     needs: [build-amd64, build-arm64]

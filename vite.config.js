@@ -23,6 +23,9 @@ export default defineConfig({
     assetsDir: 'assets',
     // Optimize for Docker multi-platform builds
     chunkSizeWarningLimit: 1000,
+    // Reduce memory usage during build
+    minify: 'esbuild',
+    target: 'es2015',
     rollupOptions: {
       output: {
         manualChunks: {

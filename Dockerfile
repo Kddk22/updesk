@@ -14,25 +14,30 @@ FROM node:18-alpine AS frontend-builder
 WORKDIR /app
 
 # Set Node options for better memory handling in emulated environments
-ENV NODE_OPTIONS="--max-old-space-size=4096"
+ENV NODE_OPTIONS="--max-old-space-size=2048"
 
 # Copy package files
 COPY package*.json ./
 
+# Install build dependencies for native modules
+RUN apk add --no-cache python3 make g++
+
 # Install all dependencies (including devDependencies needed for build)
-RUN npm ci --silent
+# Use --legacy-peer-deps and increase timeout for ARM64 builds
+RUN npm ci --silent --legacy-peer-deps --fetch-timeout=300000 || \
+    npm install --silent --legacy-peer-deps --fetch-timeout=300000
 
 # Copy source code
 COPY . .
 
-# Build the frontend
-RUN npm run build
+# Build the frontend with error handling
+RUN npm run build || (echo "Build failed, retrying with verbose output..." && npm run build --verbose)
 
 # Stage 2: Setup the production server
 FROM node:18-alpine AS production
 
-# Install dumb-init for proper signal handling
-RUN apk add --no-cache dumb-init
+# Install dumb-init and build dependencies for native modules
+RUN apk add --no-cache dumb-init python3 make g++
 
 # Create app directory and user
 RUN addgroup -g 1001 -S nodejs && \
@@ -43,9 +48,13 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
-# Install only production dependencies
-RUN npm ci --only=production --silent && \
+# Install only production dependencies with increased timeout
+RUN npm ci --only=production --silent --fetch-timeout=300000 || \
+    npm install --only=production --silent --fetch-timeout=300000 && \
     npm cache clean --force
+
+# Remove build dependencies to reduce image size
+RUN apk del python3 make g++
 
 # Copy server files
 COPY server/ ./server/
