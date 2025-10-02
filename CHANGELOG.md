@@ -15,6 +15,7 @@
 - Security Headers (HSTS, X-Frame-Options, etc.)
 - Neue `INSTALL.md` mit einfacher Installationsanleitung
 - `MIGRATION-TO-APACHE.md` mit Migrationsübersicht
+- GitHub Actions Workflow für automatische Docker-Builds bei Releases (`.github/workflows/docker.yml`)
 
 ### ❌ Entfernt
 - nginx Webserver und `nginx.conf`
@@ -24,6 +25,7 @@
 - `compare-webservers.sh` (nicht mehr benötigt)
 - Alle Apache-spezifischen Dokumentationen (APACHE-*.md)
 - Alte Dokumentationsdateien (DOCKER-*.md, OPTIMIZATION-*.md)
+- `.github/workflows/docker-publish.yml` (ersetzt durch docker.yml)
 
 ### 🔄 Geändert
 - `README.md`: Apache als Reverse Proxy dokumentiert
