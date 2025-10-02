@@ -12,18 +12,41 @@
     </div>
     
     <div class="top-bar-right">
-      <!-- Update Button -->
-      <button 
-        v-if="updateAvailable"
-        class="update-button"
-        @click="showUpdateModal"
-        title="Update verfügbar"
-      >
-        <svg class="icon update-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-        </svg>
-        <span class="update-badge">1</span>
-      </button>
+      <!-- Update Status Indicator -->
+      <div class="update-status-container">
+        <!-- Loading State -->
+        <button 
+          v-if="updateCheckState === 'checking'"
+          class="update-button checking"
+          title="Prüfe auf Updates..."
+        >
+          <div class="loading-spinner"></div>
+        </button>
+
+        <!-- Up-to-date State (shows for 5 seconds) -->
+        <button 
+          v-if="updateCheckState === 'uptodate'"
+          class="update-button uptodate"
+          title="Version ist aktuell"
+        >
+          <svg class="icon check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+          </svg>
+        </button>
+
+        <!-- Update Available State -->
+        <button 
+          v-if="updateCheckState === 'available'"
+          class="update-button available"
+          @click="showUpdateModal"
+          title="Update verfügbar"
+        >
+          <svg class="icon update-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+          <span class="update-badge">1</span>
+        </button>
+      </div>
 
       <button 
         class="theme-toggle"
@@ -55,11 +78,19 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useSettingsStore } from '../stores/settings'
+import UpdateModal from './UpdateModal.vue'
 
 const settingsStore = useSettingsStore()
 
 const currentTime = ref('')
 const currentDate = ref('')
+const updateCheckState = ref('checking') // 'checking', 'uptodate', 'available', 'hidden'
+const updateInfo = ref({
+  currentVersion: '0.0.0',
+  latestVersion: '0.0.0',
+  releaseInfo: null
+})
+const isUpdateModalVisible = ref(false)
 
 const isDarkMode = computed(() => settingsStore.theme === 'dark')
 
@@ -80,11 +111,49 @@ const toggleTheme = () => {
   settingsStore.toggleTheme()
 }
 
+const showUpdateModal = () => {
+  isUpdateModalVisible.value = true
+}
+
+const checkForUpdates = async () => {
+  try {
+    updateCheckState.value = 'checking'
+    
+    const response = await fetch('/api/updates/check')
+    const data = await response.json()
+    
+    if (!response.ok) {
+      console.error('Update check failed:', data)
+      updateCheckState.value = 'hidden'
+      return
+    }
+    
+    updateInfo.value = data
+    
+    if (data.updateAvailable) {
+      // Update available - show update icon permanently
+      updateCheckState.value = 'available'
+    } else {
+      // Up to date - show checkmark for 5 seconds
+      updateCheckState.value = 'uptodate'
+      setTimeout(() => {
+        updateCheckState.value = 'hidden'
+      }, 5000)
+    }
+  } catch (error) {
+    console.error('Error checking for updates:', error)
+    updateCheckState.value = 'hidden'
+  }
+}
+
 let timeInterval
 
 onMounted(() => {
   updateTime()
   timeInterval = setInterval(updateTime, 1000)
+  
+  // Check for updates on mount
+  checkForUpdates()
 })
 
 onUnmounted(() => {
@@ -183,6 +252,14 @@ onUnmounted(() => {
   font-variant-numeric: tabular-nums;
 }
 
+.update-status-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 28px;
+}
+
 .update-button {
   position: relative;
   background: none;
@@ -195,11 +272,69 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   transition: all 0.2s ease;
+  width: 28px;
+  height: 28px;
 }
 
-.update-button:hover {
+.update-button.checking {
+  cursor: default;
+}
+
+.update-button.uptodate {
+  cursor: default;
+  color: #10b981;
+  animation: fadeIn 0.3s ease;
+}
+
+.update-button.available:hover {
   background: var(--bg-tertiary);
   color: var(--primary-color);
+}
+
+.loading-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--bg-tertiary);
+  border-top-color: var(--primary-color);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { 
+    transform: rotate(360deg); 
+  }
+}
+
+.check-icon {
+  color: #10b981;
+  stroke-width: 3;
+  animation: checkmark 0.5s ease;
+}
+
+@keyframes checkmark {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 .update-icon {
