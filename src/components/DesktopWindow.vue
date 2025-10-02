@@ -1,10 +1,14 @@
 <template>
   <div 
-    v-if="!isMinimized"
+    v-if="!windowData?.isMinimized"
     class="desktop-window"
-    :class="{ maximized: isMaximized }"
+    :class="{ 
+      maximized: windowData?.isMaximized,
+      active: isActive
+    }"
     :style="windowStyle"
     ref="windowRef"
+    @mousedown="bringToFront"
   >
     <!-- Window Header -->
     <div 
@@ -33,7 +37,7 @@
           @click="toggleMaximize"
           title="Maximieren"
         >
-          <span class="control-icon">{{ isMaximized ? '⧉' : '□' }}</span>
+          <span class="control-icon">{{ windowData?.isMaximized ? '⧉' : '□' }}</span>
         </button>
       </div>
       
@@ -51,26 +55,20 @@
       <slot></slot>
     </div>
   </div>
-  
-  <!-- Taskbar Entry when minimized -->
-  <div 
-    v-if="isMinimized"
-    class="taskbar-entry"
-    @click="restoreWindow"
-    :title="`${title} wiederherstellen`"
-  >
-    <span class="taskbar-icon">📱</span>
-    <span class="taskbar-title">{{ title }}</span>
-  </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { useWindowManagerStore } from '../stores/windowManager'
 
 const props = defineProps({
   title: {
     type: String,
     default: 'Fenster'
+  },
+  icon: {
+    type: String,
+    default: '📱'
   },
   initialWidth: {
     type: Number,
@@ -98,26 +96,22 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['close', 'minimize', 'maximize'])
+const emit = defineEmits(['close'])
+
+// Window Manager Store
+const windowManager = useWindowManagerStore()
 
 // Window state
 const windowRef = ref(null)
 const headerRef = ref(null)
-const isMinimized = ref(false)
-const isMaximized = ref(false)
+const windowId = ref(null)
 const isDragging = ref(false)
 
-// Window position and size
-const windowX = ref(props.initialX)
-const windowY = ref(props.initialY)
-const windowWidth = ref(props.initialWidth)
-const windowHeight = ref(props.initialHeight)
-
-// Store original size for restore
-const originalX = ref(props.initialX)
-const originalY = ref(props.initialY)
-const originalWidth = ref(props.initialWidth)
-const originalHeight = ref(props.initialHeight)
+// Local position and size for dragging
+const localX = ref(props.initialX)
+const localY = ref(props.initialY)
+const localWidth = ref(props.initialWidth)
+const localHeight = ref(props.initialHeight)
 
 // Drag state
 const dragStartX = ref(0)
@@ -125,72 +119,62 @@ const dragStartY = ref(0)
 const dragStartWindowX = ref(0)
 const dragStartWindowY = ref(0)
 
+// Computed
+const windowData = computed(() => windowManager.getWindow(windowId.value))
+
+const isActive = computed(() => windowManager.isWindowActive(windowId.value))
+
 const windowStyle = computed(() => {
-  if (isMaximized.value) {
+  if (windowData.value?.isMaximized) {
     return {
       position: 'fixed',
       top: '0px',
       left: '0px',
       width: '100vw',
-      height: '100vh',
-      zIndex: 1000
+      height: 'calc(100vh - 48px)', // Account for taskbar
+      zIndex: isActive.value ? 1001 : 1000
     }
   }
   
   return {
     position: 'fixed',
-    top: `${windowY.value}px`,
-    left: `${windowX.value}px`,
-    width: `${windowWidth.value}px`,
-    height: `${windowHeight.value}px`,
-    zIndex: 1000
+    top: `${localY.value}px`,
+    left: `${localX.value}px`,
+    width: `${localWidth.value}px`,
+    height: `${localHeight.value}px`,
+    zIndex: isActive.value ? 1001 : 1000
   }
 })
 
 // Window controls
 const closeWindow = () => {
+  windowManager.unregisterWindow(windowId.value)
   emit('close')
 }
 
 const minimizeWindow = () => {
-  isMinimized.value = true
-  emit('minimize')
-}
-
-const restoreWindow = () => {
-  isMinimized.value = false
+  windowManager.minimizeWindow(windowId.value)
 }
 
 const toggleMaximize = () => {
-  if (isMaximized.value) {
-    // Restore
-    isMaximized.value = false
-    windowX.value = originalX.value
-    windowY.value = originalY.value
-    windowWidth.value = originalWidth.value
-    windowHeight.value = originalHeight.value
-  } else {
-    // Store current position/size
-    originalX.value = windowX.value
-    originalY.value = windowY.value
-    originalWidth.value = windowWidth.value
-    originalHeight.value = windowHeight.value
-    
-    // Maximize
-    isMaximized.value = true
+  windowManager.maximizeWindow(windowId.value)
+}
+
+const bringToFront = () => {
+  if (!isActive.value) {
+    windowManager.setActiveWindow(windowId.value)
   }
-  emit('maximize', isMaximized.value)
 }
 
 // Drag functionality
 const startDrag = (event) => {
-  if (isMaximized.value) return
+  if (windowData.value?.isMaximized) return
   
   isDragging.value = true
   dragStartX.value = event.clientX
   dragStartY.value = event.clientY
-  dragStartWindowX.value = windowX.value
-  dragStartWindowY.value = windowY.value
+  dragStartWindowX.value = localX.value
+  dragStartWindowY.value = localY.value
   
   document.addEventListener('mousemove', onDrag)
   document.addEventListener('mouseup', stopDrag)
@@ -205,15 +189,21 @@ const onDrag = (event) => {
   const deltaX = event.clientX - dragStartX.value
   const deltaY = event.clientY - dragStartY.value
   
-  windowX.value = Math.max(0, dragStartWindowX.value + deltaX)
-  windowY.value = Math.max(0, dragStartWindowY.value + deltaY)
+  localX.value = Math.max(0, dragStartWindowX.value + deltaX)
+  localY.value = Math.max(0, dragStartWindowY.value + deltaY)
   
-  // Keep window within viewport
-  const maxX = window.innerWidth - windowWidth.value
-  const maxY = window.innerHeight - windowHeight.value
+  // Keep window within viewport (account for taskbar)
+  const maxX = window.innerWidth - localWidth.value
+  const maxY = window.innerHeight - localHeight.value - 48 // 48px for taskbar
   
-  windowX.value = Math.min(windowX.value, maxX)
-  windowY.value = Math.min(windowY.value, maxY)
+  localX.value = Math.min(localX.value, maxX)
+  localY.value = Math.min(localY.value, maxY)
+  
+  // Update store
+  windowManager.updateWindowPosition(windowId.value, {
+    x: localX.value,
+    y: localY.value
+  })
 }
 
 const stopDrag = () => {
@@ -221,6 +211,35 @@ const stopDrag = () => {
   document.removeEventListener('mousemove', onDrag)
   document.removeEventListener('mouseup', stopDrag)
 }
+
+// Watch for window data changes from store
+watch(() => windowData.value?.position, (newPos) => {
+  if (newPos && !isDragging.value) {
+    localX.value = newPos.x
+    localY.value = newPos.y
+  }
+}, { deep: true })
+
+watch(() => windowData.value?.size, (newSize) => {
+  if (newSize) {
+    localWidth.value = newSize.width
+    localHeight.value = newSize.height
+  }
+}, { deep: true })
+
+// Lifecycle
+onMounted(() => {
+  // Register window with the window manager
+  windowId.value = windowManager.registerWindow({
+    name: props.title,
+    title: props.title,
+    icon: props.icon,
+    initialX: props.initialX,
+    initialY: props.initialY,
+    initialWidth: props.initialWidth,
+    initialHeight: props.initialHeight
+  })
+})
 
 // Cleanup
 onUnmounted(() => {
@@ -241,6 +260,13 @@ onUnmounted(() => {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   backdrop-filter: blur(10px);
   border: 1px solid var(--border-color);
+}
+
+.desktop-window.active {
+  box-shadow: 
+    0 15px 35px rgba(0, 0, 0, 0.2),
+    0 5px 15px rgba(0, 0, 0, 0.15),
+    0 0 0 2px rgba(233, 84, 32, 0.3);
 }
 
 .desktop-window.maximized {
@@ -336,39 +362,6 @@ onUnmounted(() => {
   background: var(--bg-primary);
 }
 
-/* Taskbar Entry */
-.taskbar-entry {
-  position: fixed;
-  bottom: 20px;
-  left: 20px;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  padding: 8px 12px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  transition: all 0.2s ease;
-  z-index: 999;
-}
-
-.taskbar-entry:hover {
-  background: var(--bg-hover);
-  transform: translateY(-2px);
-}
-
-.taskbar-icon {
-  font-size: 16px;
-}
-
-.taskbar-title {
-  font-size: 12px;
-  color: var(--text-primary);
-  font-weight: 500;
-}
-
 /* Dark theme adjustments */
 .dark .desktop-window {
   background: var(--bg-primary);
@@ -378,21 +371,23 @@ onUnmounted(() => {
     0 0 0 1px rgba(255, 255, 255, 0.05);
 }
 
+.dark .desktop-window.active {
+  box-shadow: 
+    0 15px 35px rgba(0, 0, 0, 0.4),
+    0 5px 15px rgba(0, 0, 0, 0.3),
+    0 0 0 2px rgba(233, 84, 32, 0.5);
+}
+
 .dark .window-header {
   background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
   border-bottom-color: var(--border-color-dark);
-}
-
-.dark .taskbar-entry {
-  background: var(--bg-secondary);
-  border-color: var(--border-color-dark);
 }
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .desktop-window {
     width: 100vw !important;
-    height: 100vh !important;
+    height: calc(100vh - 56px) !important;
     top: 0 !important;
     left: 0 !important;
     border-radius: 0;

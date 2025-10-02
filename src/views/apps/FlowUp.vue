@@ -1,13 +1,12 @@
 <template>
   <DesktopWindow
     title="FlowUp"
+    icon="⚡"
     :initial-width="900"
     :initial-height="700"
     :initial-x="150"
     :initial-y="100"
     @close="closeApp"
-    @minimize="minimizeApp"
-    @maximize="maximizeApp"
   >
     <div class="flowup-app">
       <!-- Sidebar Navigation -->
@@ -521,14 +520,6 @@ const formatDate = (dateString) => {
 // Window Controls
 const closeApp = () => {
   router.push('/')
-}
-
-const minimizeApp = () => {
-  // Window component handles minimization
-}
-
-const maximizeApp = (isMaximized) => {
-  // Window component handles maximization
 }
 
 // Lifecycle

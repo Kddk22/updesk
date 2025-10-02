@@ -1,13 +1,12 @@
 <template>
   <DesktopWindow
     title="Port Dokumentation"
+    icon="🔌"
     :initial-width="900"
     :initial-height="700"
     :initial-x="150"
     :initial-y="100"
     @close="closeApp"
-    @minimize="minimizeApp"
-    @maximize="maximizeApp"
   >
     <div class="port-doc-app">
       <!-- Sidebar Navigation -->
@@ -246,14 +245,6 @@ const resetForm = () => {
 
 // App control methods
 const closeApp = () => {
-  // Emit close to parent
-}
-
-const minimizeApp = () => {
-  // Handled by DesktopWindow
-}
-
-const maximizeApp = () => {
   // Handled by DesktopWindow
 }
 

@@ -56,6 +56,9 @@
       :is="window.component"
       @close="closeWindow(window.id)"
     />
+    
+    <!-- Taskbar -->
+    <Taskbar />
   </div>
 </template>
 
@@ -70,6 +73,7 @@ import ProgramIcon from '../components/ProgramIcon.vue'
 import ProgramModal from '../components/ProgramModal.vue'
 import ContextMenu from '../components/ContextMenu.vue'
 import SettingsModal from '../components/SettingsModal.vue'
+import Taskbar from '../components/Taskbar.vue'
 import FlowUp from './apps/FlowUp.vue'
 import PortDocumentation from './apps/PortDocumentation.vue'
 
@@ -233,6 +237,7 @@ onUnmounted(() => {
 .desktop-content {
   flex: 1;
   padding: 20px;
+  padding-bottom: 68px; /* Space for taskbar (48px) + padding */
   overflow: hidden;
 }
 
@@ -247,6 +252,7 @@ onUnmounted(() => {
 @media (max-width: 768px) {
   .desktop-content {
     padding: 15px;
+    padding-bottom: 71px; /* Space for taskbar (56px) + padding */
   }
 }
 </style>
