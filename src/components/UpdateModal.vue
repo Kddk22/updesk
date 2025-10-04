@@ -41,6 +41,15 @@
                 <div class="release-notes" v-html="formatReleaseNotes(updateInfo.releaseInfo.body)"></div>
               </div>
 
+              <div v-else class="release-info-placeholder">
+                <p class="info-text">
+                  <svg class="info-icon" viewBox="0 0 24 24" fill="currentColor">
+                    <path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm8.706-1.442c1.146-.573 2.437.463 2.126 1.706l-.709 2.836.042-.02a.75.75 0 01.67 1.34l-.04.022c-1.147.573-2.438-.463-2.127-1.706l.71-2.836-.042.02a.75.75 0 11-.671-1.34l.041-.022zM12 9a.75.75 0 100-1.5.75.75 0 000 1.5z" clip-rule="evenodd" />
+                  </svg>
+                  Eine neue Version ist verfügbar. Klicken Sie auf "Jetzt aktualisieren", um die neueste Version zu installieren.
+                </p>
+              </div>
+
               <div class="warning-box">
                 <svg class="warning-icon" viewBox="0 0 24 24" fill="currentColor">
                   <path fill-rule="evenodd" d="M9.401 3.003c1.155-2 4.043-2 5.197 0l7.355 12.748c1.154 2-.29 4.5-2.599 4.5H4.645c-2.309 0-3.752-2.5-2.598-4.5L9.4 3.003zM12 8.25a.75.75 0 01.75.75v3.75a.75.75 0 01-1.5 0V9a.75.75 0 01.75-.75zm0 8.25a.75.75 0 100-1.5.75.75 0 000 1.5z" clip-rule="evenodd" />
@@ -176,9 +185,13 @@ const formatReleaseNotes = (markdown) => {
     .replace(/\n/g, '<br>')
 }
 
-// Reset state when modal is closed
+// Handle modal state changes
 watch(() => props.show, (newVal) => {
-  if (!newVal) {
+  if (newVal) {
+    // Debug: Log updateInfo when modal is opened
+    console.log('UpdateModal opened with data:', props.updateInfo)
+  } else {
+    // Reset state when modal is closed
     setTimeout(() => {
       isUpdating.value = false
       updateComplete.value = false
@@ -382,6 +395,32 @@ watch(() => props.show, (newVal) => {
 
 .release-notes :deep(li) {
   margin: 4px 0;
+}
+
+.release-info-placeholder {
+  margin-bottom: 24px;
+  padding: 20px;
+  background: var(--bg-secondary);
+  border-radius: 8px;
+  border-left: 3px solid var(--primary-color);
+}
+
+.info-text {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text-primary);
+}
+
+.info-icon {
+  width: 20px;
+  height: 20px;
+  color: var(--primary-color);
+  flex-shrink: 0;
+  margin-top: 2px;
 }
 
 .warning-box {
