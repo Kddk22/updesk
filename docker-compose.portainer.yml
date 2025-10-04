@@ -1,0 +1,29 @@
+# UpDesk Virtual Desktop Launcher - Portainer Edition
+# GitHub: https://github.com/uptec-ps/updesk
+# Docker Hub: uptecps/updesk
+#
+# This version is optimized for Portainer deployment
+# It uses pre-built images from Docker Hub and doesn't require local files
+
+version: '3.3'
+
+services:
+  updesk:
+    image: uptecps/updesk:latest
+    container_name: updesk-backend
+    ports:
+      - "5002:5002"
+    environment:
+      NODE_ENV: production
+      PORT: "5002"
+    volumes:
+      - updesk_data:/app/data
+    restart: unless-stopped
+    networks:
+      - updesk_network
+
+volumes:
+  updesk_data:
+
+networks:
+  updesk_network:

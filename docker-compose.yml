@@ -1,20 +1,21 @@
-version: '3.8'
-
 # UpDesk Virtual Desktop Launcher
 # GitHub: https://github.com/uptec-ps/updesk
 # Docker Hub: uptecps/updesk
+#
+# ⚠️ WICHTIG: Diese Datei ist für LOKALE ENTWICKLUNG gedacht!
+# 
+# Für Portainer-Installation verwende stattdessen:
+# - docker-compose.portainer.yml (nur Backend, Port 5002)
+# - docker-compose.portainer-full.yml (Backend + Apache, Port 80)
+#
+# Siehe: PORTAINER-INSTALL.md für Details
 
 services:
   updesk:
     # === BUILD OPTIONS (uncomment one) ===
     
     # Option 1: Build from local source (for development)
-    build:
-      context: .
-      dockerfile: Dockerfile
-    
-    # Option 2: Build directly from GitHub (uncomment to use)
-    # build: https://github.com/uptec-ps/updesk.git
+    build: https://github.com/uptec-ps/updesk.git
     
     # Option 3: Use pre-built image from Docker Hub (uncomment to use)
     # image: uptecps/updesk:latest
