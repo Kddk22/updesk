@@ -55,8 +55,12 @@
                   <path fill-rule="evenodd" d="M9.401 3.003c1.155-2 4.043-2 5.197 0l7.355 12.748c1.154 2-.29 4.5-2.599 4.5H4.645c-2.309 0-3.752-2.5-2.598-4.5L9.4 3.003zM12 8.25a.75.75 0 01.75.75v3.75a.75.75 0 01-1.5 0V9a.75.75 0 01.75-.75zm0 8.25a.75.75 0 100-1.5.75.75 0 000 1.5z" clip-rule="evenodd" />
                 </svg>
                 <div class="warning-text">
-                  <strong>Wichtig:</strong> Die Anwendung wird während des Updates neu gestartet. 
-                  Bitte speichern Sie alle offenen Arbeiten.
+                  <strong>Docker Update:</strong> Um das Update durchzuführen, führen Sie folgende Befehle aus:
+                  <div class="code-block">
+                    <code>docker-compose pull</code><br>
+                    <code>docker-compose up -d</code>
+                  </div>
+                  <small>Oder verwenden Sie Portainer: Stack → Pull and redeploy</small>
                 </div>
               </div>
             </div>
@@ -88,13 +92,13 @@
 
           <div class="modal-footer" v-if="!isUpdating && !updateComplete">
             <button class="btn btn-secondary" @click="closeModal">
-              Später
+              Schließen
             </button>
-            <button class="btn btn-primary" @click="startUpdate">
+            <button class="btn btn-primary" @click="copyUpdateCommands">
               <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
               </svg>
-              Jetzt aktualisieren
+              {{ copyButtonText }}
             </button>
           </div>
         </div>
@@ -122,10 +126,31 @@ const emit = defineEmits(['close', 'update'])
 const isUpdating = ref(false)
 const updateComplete = ref(false)
 const updateError = ref(null)
+const copyButtonText = ref('Befehle kopieren')
 
 const closeModal = () => {
   if (!isUpdating.value) {
     emit('close')
+  }
+}
+
+const copyUpdateCommands = async () => {
+  const commands = 'docker-compose pull\ndocker-compose up -d'
+  
+  try {
+    await navigator.clipboard.writeText(commands)
+    copyButtonText.value = '✓ Kopiert!'
+    
+    setTimeout(() => {
+      copyButtonText.value = 'Befehle kopieren'
+    }, 2000)
+  } catch (error) {
+    console.error('Failed to copy:', error)
+    copyButtonText.value = 'Fehler beim Kopieren'
+    
+    setTimeout(() => {
+      copyButtonText.value = 'Befehle kopieren'
+    }, 2000)
   }
 }
 
@@ -328,7 +353,7 @@ watch(() => props.show, (newVal) => {
 }
 
 .version-box.latest .version-label {
-  color: rgba(255, 255, 255, 0.9);
+  color: #ffffff;
 }
 
 .version-number {
@@ -342,7 +367,7 @@ watch(() => props.show, (newVal) => {
 }
 
 .version-box.latest .version-number {
-  color: white;
+  color: #ffffff;
 }
 
 .arrow-icon {
@@ -446,6 +471,27 @@ watch(() => props.show, (newVal) => {
   color: var(--text-primary);
 }
 
+.warning-text small {
+  display: block;
+  margin-top: 8px;
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.code-block {
+  margin: 12px 0 8px 0;
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 6px;
+  font-family: 'Courier New', monospace;
+}
+
+.code-block code {
+  color: #10b981;
+  font-size: 13px;
+  line-height: 1.8;
+}
+
 .updating-state,
 .update-complete,
 .error-state {
@@ -539,12 +585,18 @@ watch(() => props.show, (newVal) => {
 
 .btn-primary {
   background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
-  color: white;
+  color: #ffffff;
 }
 
 .btn-primary:hover {
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+}
+
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
 }
 
 .btn-icon {
