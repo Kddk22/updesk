@@ -1,86 +1,203 @@
-# UpDesk Virtual Desktop Launcher
+# UpDesk Virtual Desktop Launcher - Portainer Full Edition with Apache
 # GitHub: https://github.com/uptec-ps/updesk
 # Docker Hub: uptecps/updesk
 #
-# ⚠️ WICHTIG: Diese Datei ist für LOKALE ENTWICKLUNG gedacht!
-# 
-# Für Portainer-Installation verwende stattdessen:
-# - docker-compose.portainer.yml (nur Backend, Port 5002)
-# - docker-compose.portainer-full.yml (Backend + Apache, Port 80)
-#
-# Siehe: PORTAINER-INSTALL.md für Details
+# This version includes Apache reverse proxy with embedded configuration
+# Suitable for Portainer deployment with HTTP support
+# No local files required - everything is self-contained
+
+version: '3.3'
 
 services:
   updesk:
-    # === BUILD OPTIONS (uncomment one) ===
-    
-    # Option 1: Build from local source (for development)
-    build: https://github.com/uptec-ps/updesk.git
-    
-    # Option 3: Use pre-built image from Docker Hub (uncomment to use)
-    # image: uptecps/updesk:latest
-    
+    image: uptecps/updesk:latest
     container_name: updesk-backend
-    ports:
-      - "5002:5002"
+    expose:
+      - "5006"
     environment:
-      - NODE_ENV=production
-      - PORT=5002
+      NODE_ENV: production
+      PORT: "5006"
     volumes:
-      # Persist SQLite database
       - updesk_data:/app/data
-      # Share static files with Apache
       - updesk_static:/app/dist
-      # Optional: Mount custom wallpapers
-      - ./public/wallpapers:/app/public/wallpapers:ro
-      # Optional: Mount custom icons
-      - ./public/icons:/app/public/icons:ro
     restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "node", "-e", "require('http').get('http://localhost:5002/api/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-    labels:
-      - "com.updesk.description=UpDesk Virtual Desktop Launcher"
-      - "com.updesk.version=1.0.0"
     networks:
       - updesk_network
 
-  # Apache reverse proxy for HTTP and HTTPS
   apache:
     image: httpd:2.4-alpine
     container_name: updesk-app
     ports:
       - "80:80"
-      - "443:443"
     volumes:
-      - ./apache.conf:/usr/local/apache2/conf/extra/updesk.conf:ro
-      - ./apache-httpd.conf:/usr/local/apache2/conf/httpd.conf:ro
-      - ./ssl:/usr/local/apache2/ssl:ro
-      # Mount static files from updesk container for direct serving
       - updesk_static:/usr/local/apache2/htdocs:ro
     depends_on:
       - updesk
     restart: unless-stopped
     networks:
       - updesk_network
-    labels:
-      - "com.updesk.description=Apache reverse proxy for UpDesk"
+    command:
+      - /bin/sh
+      - -c
+      - |
+        cat > /usr/local/apache2/conf/httpd.conf << 'HTTPD_EOF'
+        ServerRoot "/usr/local/apache2"
+        Listen 80
+        
+        LoadModule mpm_event_module modules/mod_mpm_event.so
+        LoadModule authn_core_module modules/mod_authn_core.so
+        LoadModule authz_core_module modules/mod_authz_core.so
+        LoadModule mime_module modules/mod_mime.so
+        LoadModule log_config_module modules/mod_log_config.so
+        LoadModule headers_module modules/mod_headers.so
+        LoadModule setenvif_module modules/mod_setenvif.so
+        LoadModule unixd_module modules/mod_unixd.so
+        LoadModule dir_module modules/mod_dir.so
+        LoadModule rewrite_module modules/mod_rewrite.so
+        LoadModule proxy_module modules/mod_proxy.so
+        LoadModule proxy_http_module modules/mod_proxy_http.so
+        LoadModule filter_module modules/mod_filter.so
+        LoadModule deflate_module modules/mod_deflate.so
+        LoadModule expires_module modules/mod_expires.so
+        
+        <IfModule unixd_module>
+          User daemon
+          Group daemon
+        </IfModule>
+        
+        ServerAdmin admin@localhost
+        ServerName localhost
+        ServerTokens Prod
+        ServerSignature Off
+        TraceEnable Off
+        
+        <Directory />
+          AllowOverride none
+          Require all denied
+        </Directory>
+        
+        DocumentRoot "/usr/local/apache2/htdocs"
+        <Directory "/usr/local/apache2/htdocs">
+          Options -Indexes +FollowSymLinks
+          AllowOverride None
+          Require all granted
+        </Directory>
+        
+        <IfModule dir_module>
+          DirectoryIndex index.html
+        </IfModule>
+        
+        <Files ".ht*">
+          Require all denied
+        </Files>
+        
+        ErrorLog /proc/self/fd/2
+        LogLevel warn
+        
+        <IfModule log_config_module>
+          LogFormat "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\"" combined
+          CustomLog /proc/self/fd/1 combined
+        </IfModule>
+        
+        <IfModule mime_module>
+          TypesConfig conf/mime.types
+          AddType application/javascript .js .mjs
+          AddType application/json .json
+          AddType text/css .css
+          AddType image/svg+xml .svg .svgz
+          AddType image/webp .webp
+          AddType font/woff .woff
+          AddType font/woff2 .woff2
+          AddType font/ttf .ttf
+          AddType font/otf .otf
+          AddType font/eot .eot
+        </IfModule>
+        
+        # Performance Tuning
+        Timeout 60
+        KeepAlive On
+        MaxKeepAliveRequests 100
+        KeepAliveTimeout 5
+        ProxyTimeout 300
+        
+        # Security Headers
+        Header always set X-Content-Type-Options "nosniff"
+        Header always set X-Frame-Options "SAMEORIGIN"
+        Header always set X-XSS-Protection "1; mode=block"
+        Header always set Referrer-Policy "strict-origin-when-cross-origin"
+        
+        # Gzip Compression
+        <IfModule mod_deflate.c>
+          AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css text/javascript
+          AddOutputFilterByType DEFLATE application/javascript application/json application/xml
+          AddOutputFilterByType DEFLATE image/svg+xml
+          SetEnvIfNoCase Request_URI \.(?:gif|jpe?g|png|webp|ico|mp4|webm|woff2?)$ no-gzip
+        </IfModule>
+        
+        # API Requests → Backend (Reverse Proxy)
+        <Location /api>
+          ProxyPreserveHost On
+          ProxyPass http://updesk:5006/api
+          ProxyPassReverse http://updesk:5006/api
+          Header set Cache-Control "no-cache, no-store, must-revalidate"
+          Header set Pragma "no-cache"
+          Header set Expires "0"
+        </Location>
+        
+        # Static Assets with long cache
+        <LocationMatch "^/assets/.*\.(js|css|woff2?|ttf|eot|otf|svg|png|jpg|jpeg|gif|webp|ico)$">
+          <IfModule mod_expires.c>
+            ExpiresActive On
+            ExpiresDefault "access plus 1 year"
+          </IfModule>
+          Header set Cache-Control "public, immutable, max-age=31536000"
+          Header set Access-Control-Allow-Origin "*"
+          FileETag None
+        </LocationMatch>
+        
+        # Assets directory
+        <Directory "/usr/local/apache2/htdocs/assets">
+          Options -Indexes +FollowSymLinks
+          AllowOverride None
+          Require all granted
+          <IfModule mod_expires.c>
+            ExpiresActive On
+            ExpiresDefault "access plus 1 year"
+          </IfModule>
+          Header set Cache-Control "public, immutable, max-age=31536000"
+        </Directory>
+        
+        # SPA Routing (Vue Router)
+        <Directory "/usr/local/apache2/htdocs">
+          RewriteEngine On
+          RewriteCond %{REQUEST_FILENAME} -f
+          RewriteRule ^ - [L]
+          RewriteCond %{REQUEST_FILENAME} -d
+          RewriteRule ^ - [L]
+          RewriteCond %{REQUEST_URI} ^/api
+          RewriteRule ^ - [L]
+          RewriteRule ^ /index.html [L]
+        </Directory>
+        
+        # index.html - Short cache
+        <Files "index.html">
+          <IfModule mod_expires.c>
+            ExpiresActive On
+            ExpiresDefault "access plus 5 minutes"
+          </IfModule>
+          Header set Cache-Control "public, max-age=300, must-revalidate"
+        </Files>
+        
+        # Deny access to sensitive files
+        <FilesMatch "\.(env|log|sql|sqlite|db)$">
+          Require all denied
+        </FilesMatch>
+        HTTPD_EOF
+        httpd-foreground
 
 volumes:
   updesk_data:
-    driver: local
-    labels:
-      - "com.updesk.description=UpDesk SQLite database storage"
   updesk_static:
-    driver: local
-    labels:
-      - "com.updesk.description=UpDesk static files (frontend build)"
 
 networks:
   updesk_network:
-    driver: bridge
-    labels:
-      - "com.updesk.description=UpDesk application network"
