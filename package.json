@@ -1,6 +1,6 @@
 {
   "name": "updesk-virtual-desktop",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Virtual Desktop Launcher with Vue.js 3 and SQLite",
   "main": "server/index.js",
   "scripts": {
