@@ -1,10 +1,10 @@
 <template>
   <div 
-    v-if="!windowData || !windowData.isMinimized"
     class="desktop-window"
     :class="{ 
       maximized: windowData?.isMaximized,
-      active: isActive
+      active: isActive,
+      minimized: windowData?.isMinimized
     }"
     :style="windowStyle"
     ref="windowRef"
@@ -272,6 +272,10 @@ onUnmounted(() => {
 .desktop-window.maximized {
   border-radius: 0;
   transition: all 0.2s ease;
+}
+
+.desktop-window.minimized {
+  display: none;
 }
 
 .window-header {
