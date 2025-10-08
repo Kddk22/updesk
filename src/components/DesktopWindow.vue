@@ -1,6 +1,6 @@
 <template>
   <div 
-    v-if="!windowData?.isMinimized"
+    v-if="!windowData || !windowData.isMinimized"
     class="desktop-window"
     :class="{ 
       maximized: windowData?.isMaximized,
