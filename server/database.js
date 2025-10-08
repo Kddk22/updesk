@@ -242,7 +242,7 @@ export const initDatabase = async () => {
     // Run migrations for existing databases
     await runMigrations();
 
-    console.log('✅ Database initialized successfully');
+    console.log('✅ Database initialized successfully, 08.10.');
   } catch (error) {
     console.error('❌ Database initialization failed:', error);
     throw error;
