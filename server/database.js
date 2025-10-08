@@ -34,6 +34,36 @@ db.runAsync = function(...args) {
 db.getAsync = promisify(db.get.bind(db));
 db.allAsync = promisify(db.all.bind(db));
 
+// Migration function to add missing programs to existing databases
+const runMigrations = async () => {
+  try {
+    console.log('🔄 Running database migrations...');
+    
+    // Migration 1: Add Docker Manager if missing
+    const dockerManager = await db.getAsync(
+      'SELECT * FROM programs WHERE url = ?',
+      ['/apps/docker']
+    );
+    
+    if (!dockerManager) {
+      console.log('📦 Adding Docker Manager to existing database...');
+      await db.runAsync(
+        'INSERT INTO programs (name, url, icon, position_x, position_y) VALUES (?, ?, ?, ?, ?)',
+        ['Docker Manager', '/apps/docker', '/icons/docker.svg', 4, 0]
+      );
+      console.log('✅ Docker Manager added successfully');
+    }
+    
+    // Add more migrations here in the future
+    // Migration 2: ...
+    // Migration 3: ...
+    
+  } catch (error) {
+    console.error('⚠️  Migration warning:', error.message);
+    // Don't throw - migrations should not break the app
+  }
+};
+
 export const initDatabase = async () => {
   try {
     console.log('🗄️  Initializing database...');
@@ -208,6 +238,9 @@ export const initDatabase = async () => {
         );
       }
     }
+
+    // Run migrations for existing databases
+    await runMigrations();
 
     console.log('✅ Database initialized successfully');
   } catch (error) {
