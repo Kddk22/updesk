@@ -150,6 +150,13 @@ export const initDatabase = async () => {
           position_y: 0
         },
         {
+          name: 'Docker Manager',
+          url: '/apps/docker',
+          icon: '/icons/docker.svg',
+          position_x: 4,
+          position_y: 0
+        },
+        {
           name: 'Google',
           url: 'https://www.google.com',
           icon: '/icons/google.svg',

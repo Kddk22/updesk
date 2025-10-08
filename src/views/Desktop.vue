@@ -76,6 +76,7 @@ import SettingsModal from '../components/SettingsModal.vue'
 import Taskbar from '../components/Taskbar.vue'
 import FlowUp from './apps/FlowUp.vue'
 import PortDocumentation from './apps/PortDocumentation.vue'
+import DockerManager from './apps/DockerManager.vue'
 
 const router = useRouter()
 const programsStore = useProgramsStore()
@@ -115,6 +116,8 @@ const openProgram = (program) => {
     openWindow('FlowUp', FlowUp)
   } else if (program.url === '/apps/portdocumentation') {
     openWindow('PortDocumentation', PortDocumentation)
+  } else if (program.url === '/apps/docker') {
+    openWindow('DockerManager', DockerManager)
   } else if (program.url.startsWith('/apps/')) {
     // Navigate to other internal apps using Vue Router
     router.push(program.url)

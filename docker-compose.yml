@@ -20,6 +20,7 @@ services:
     volumes:
       - updesk_data:/app/data
       - updesk_static:/app/dist
+      - /var/run/docker.sock:/var/run/docker.sock:ro
     restart: unless-stopped
     networks:
       - updesk_network
