@@ -142,7 +142,7 @@ const windowStyle = computed(() => {
     left: `${localX.value}px`,
     width: `${localWidth.value}px`,
     height: `${localHeight.value}px`,
-    zIndex: isActive.value ? 1001 : 1000
+    zIndex: windowId.value ? (isActive.value ? 1001 : 1000) : 1001
   }
 })
 

@@ -6,7 +6,7 @@
     :initial-height="700"
     :min-width="800"
     :min-height="500"
-    @close="$emit('close')"
+    @close="closeApp"
   >
     <div class="docker-manager">
       <!-- Sidebar Navigation -->
@@ -344,10 +344,11 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { useRouter } from 'vue-router'
 import DesktopWindow from '../../components/DesktopWindow.vue'
 import axios from 'axios'
 
-const emit = defineEmits(['close'])
+const router = useRouter()
 
 // State
 const activeView = ref('overview')
@@ -470,6 +471,11 @@ const loadLogs = async (id) => {
 const formatDate = (timestamp) => {
   const date = new Date(timestamp * 1000)
   return date.toLocaleString('de-DE')
+}
+
+// Window Controls
+const closeApp = () => {
+  router.push('/')
 }
 
 // Lifecycle

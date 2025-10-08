@@ -117,6 +117,7 @@ const openProgram = (program) => {
   } else if (program.url === '/apps/portdocumentation') {
     openWindow('PortDocumentation', PortDocumentation)
   } else if (program.url === '/apps/docker') {
+    console.log('🐳 Opening Docker Manager...')
     openWindow('DockerManager', DockerManager)
   } else if (program.url.startsWith('/apps/')) {
     // Navigate to other internal apps using Vue Router
