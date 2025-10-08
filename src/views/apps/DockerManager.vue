@@ -122,219 +122,219 @@
 
           <!-- Container list -->
           <div v-else class="container-list">
-        <div 
-          v-for="container in containers" 
-          :key="container.id"
-          class="container-card"
-          :class="{ 
-            'running': container.state === 'running',
-            'stopped': container.state !== 'running',
-            'has-update': container.updateAvailable
-          }"
-        >
-          <!-- Container Header -->
-          <div class="container-header">
-            <div class="container-info">
-              <div class="container-name">
-                <span class="status-dot" :class="container.state"></span>
-                <h3>{{ container.name }}</h3>
-                <span v-if="container.updateAvailable" class="update-badge" title="Update verfügbar">
-                  🔄 Update
-                </span>
-              </div>
-              <div class="container-image">
-                <span class="label">Image:</span>
-                {{ container.image }}
-              </div>
-            </div>
-            <div class="container-actions">
-              <button 
-                v-if="container.state !== 'running'"
-                @click="startContainer(container.id)"
-                class="btn-action btn-start"
-                title="Container starten"
-              >
-                ▶️
-              </button>
-              <button 
-                v-if="container.state === 'running'"
-                @click="stopContainer(container.id)"
-                class="btn-action btn-stop"
-                title="Container stoppen"
-              >
-                ⏹️
-              </button>
-              <button 
-                @click="restartContainer(container.id)"
-                class="btn-action btn-restart"
-                title="Container neustarten"
-              >
-                🔄
-              </button>
-              <button 
-                @click="toggleDetails(container.id)"
-                class="btn-action btn-details"
-                :class="{ 'active': expandedContainer === container.id }"
-                title="Details anzeigen"
-              >
-                {{ expandedContainer === container.id ? '▲' : '▼' }}
-              </button>
-            </div>
-          </div>
-
-          <!-- Container Status -->
-          <div class="container-status">
-            <div class="status-item">
-              <span class="status-label">Status:</span>
-              <span class="status-value" :class="container.state">
-                {{ container.status }}
-              </span>
-            </div>
-            <div class="status-item" v-if="containerStats[container.id]">
-              <span class="status-label">CPU:</span>
-              <span class="status-value">
-                {{ containerStats[container.id].cpu?.percent || '0' }}%
-              </span>
-            </div>
-            <div class="status-item" v-if="containerStats[container.id]">
-              <span class="status-label">RAM:</span>
-              <span class="status-value">
-                {{ containerStats[container.id].memory?.usageMB || '0' }} MB / 
-                {{ containerStats[container.id].memory?.limitMB || '0' }} MB
-              </span>
-            </div>
-          </div>
-
-          <!-- Expanded Details -->
-          <transition name="expand">
-            <div v-if="expandedContainer === container.id" class="container-details">
-              <!-- Tabs -->
-              <div class="tabs">
-                <button 
-                  @click="activeTab = 'info'"
-                  :class="{ 'active': activeTab === 'info' }"
-                  class="tab"
-                >
-                  ℹ️ Info
-                </button>
-                <button 
-                  @click="activeTab = 'ports'"
-                  :class="{ 'active': activeTab === 'ports' }"
-                  class="tab"
-                >
-                  🔌 Ports
-                </button>
-                <button 
-                  @click="activeTab = 'logs'; loadLogs(container.id)"
-                  :class="{ 'active': activeTab === 'logs' }"
-                  class="tab"
-                >
-                  📋 Logs
-                </button>
-                <button 
-                  @click="activeTab = 'env'"
-                  :class="{ 'active': activeTab === 'env' }"
-                  class="tab"
-                >
-                  🔧 Umgebung
-                </button>
-              </div>
-
-              <!-- Tab Content -->
-              <div class="tab-content">
-                <!-- Info Tab -->
-                <div v-if="activeTab === 'info'" class="info-tab">
-                  <div class="info-row">
-                    <span class="info-label">Container ID:</span>
-                    <span class="info-value">{{ container.id.substring(0, 12) }}</span>
-                  </div>
-                  <div class="info-row">
-                    <span class="info-label">Image ID:</span>
-                    <span class="info-value">{{ container.imageId.split(':')[1]?.substring(0, 12) }}</span>
-                  </div>
-                  <div class="info-row">
-                    <span class="info-label">Erstellt:</span>
-                    <span class="info-value">{{ formatDate(container.created) }}</span>
-                  </div>
-                  <div class="info-row">
-                    <span class="info-label">Neustarts:</span>
-                    <span class="info-value">{{ container.restartCount }}</span>
-                  </div>
-                  <div class="info-row" v-if="container.networkSettings?.ipAddress">
-                    <span class="info-label">IP-Adresse:</span>
-                    <span class="info-value">{{ container.networkSettings.ipAddress }}</span>
-                  </div>
-                  <div v-if="container.updateAvailable" class="info-row update-info">
-                    <span class="info-label">Update Status:</span>
-                    <span class="info-value">
-                      ⚠️ Neues Image verfügbar
+            <div 
+              v-for="container in containers" 
+              :key="container.id"
+              class="container-card"
+              :class="{ 
+                'running': container.state === 'running',
+                'stopped': container.state !== 'running',
+                'has-update': container.updateAvailable
+              }"
+            >
+              <!-- Container Header -->
+              <div class="container-header">
+                <div class="container-info">
+                  <div class="container-name">
+                    <span class="status-dot" :class="container.state"></span>
+                    <h3>{{ container.name }}</h3>
+                    <span v-if="container.updateAvailable" class="update-badge" title="Update verfügbar">
+                      🔄 Update
                     </span>
                   </div>
-                </div>
-
-                <!-- Ports Tab -->
-                <div v-if="activeTab === 'ports'" class="ports-tab">
-                  <div v-if="container.ports && container.ports.length > 0">
-                    <div 
-                      v-for="(port, index) in container.ports" 
-                      :key="index"
-                      class="port-item"
-                    >
-                      <span class="port-private">{{ port.PrivatePort }}/{{ port.Type }}</span>
-                      <span v-if="port.PublicPort" class="port-arrow">→</span>
-                      <span v-if="port.PublicPort" class="port-public">
-                        {{ port.IP || '0.0.0.0' }}:{{ port.PublicPort }}
-                      </span>
-                      <span v-else class="port-none">Nicht veröffentlicht</span>
-                    </div>
-                  </div>
-                  <div v-else class="no-data">
-                    Keine Port-Mappings konfiguriert
+                  <div class="container-image">
+                    <span class="label">Image:</span>
+                    {{ container.image }}
                   </div>
                 </div>
-
-                <!-- Logs Tab -->
-                <div v-if="activeTab === 'logs'" class="logs-tab">
-                  <div class="logs-header">
-                    <button @click="loadLogs(container.id)" class="btn-refresh-logs">
-                      🔄 Logs aktualisieren
-                    </button>
-                    <select v-model="logTail" @change="loadLogs(container.id)" class="log-tail-select">
-                      <option value="50">Letzte 50 Zeilen</option>
-                      <option value="100">Letzte 100 Zeilen</option>
-                      <option value="200">Letzte 200 Zeilen</option>
-                      <option value="500">Letzte 500 Zeilen</option>
-                    </select>
-                  </div>
-                  <div v-if="loadingLogs" class="loading-logs">
-                    Lade Logs...
-                  </div>
-                  <pre v-else-if="containerLogs[container.id]" class="logs-content">{{ containerLogs[container.id] }}</pre>
-                  <div v-else class="no-data">
-                    Keine Logs verfügbar
-                  </div>
-                </div>
-
-                <!-- Environment Tab -->
-                <div v-if="activeTab === 'env'" class="env-tab">
-                  <div v-if="container.config?.env && container.config.env.length > 0">
-                    <div 
-                      v-for="(envVar, index) in container.config.env" 
-                      :key="index"
-                      class="env-item"
-                    >
-                      <span class="env-key">{{ envVar.split('=')[0] }}</span>
-                      <span class="env-value">{{ envVar.split('=').slice(1).join('=') }}</span>
-                    </div>
-                  </div>
-                  <div v-else class="no-data">
-                    Keine Umgebungsvariablen konfiguriert
-                  </div>
+                <div class="container-actions">
+                  <button 
+                    v-if="container.state !== 'running'"
+                    @click="startContainer(container.id)"
+                    class="btn-action btn-start"
+                    title="Container starten"
+                  >
+                    ▶️
+                  </button>
+                  <button 
+                    v-if="container.state === 'running'"
+                    @click="stopContainer(container.id)"
+                    class="btn-action btn-stop"
+                    title="Container stoppen"
+                  >
+                    ⏹️
+                  </button>
+                  <button 
+                    @click="restartContainer(container.id)"
+                    class="btn-action btn-restart"
+                    title="Container neustarten"
+                  >
+                    🔄
+                  </button>
+                  <button 
+                    @click="toggleDetails(container.id)"
+                    class="btn-action btn-details"
+                    :class="{ 'active': expandedContainer === container.id }"
+                    title="Details anzeigen"
+                  >
+                    {{ expandedContainer === container.id ? '▲' : '▼' }}
+                  </button>
                 </div>
               </div>
+
+              <!-- Container Status -->
+              <div class="container-status">
+                <div class="status-item">
+                  <span class="status-label">Status:</span>
+                  <span class="status-value" :class="container.state">
+                    {{ container.status }}
+                  </span>
+                </div>
+                <div class="status-item" v-if="containerStats[container.id]">
+                  <span class="status-label">CPU:</span>
+                  <span class="status-value">
+                    {{ containerStats[container.id].cpu?.percent || '0' }}%
+                  </span>
+                </div>
+                <div class="status-item" v-if="containerStats[container.id]">
+                  <span class="status-label">RAM:</span>
+                  <span class="status-value">
+                    {{ containerStats[container.id].memory?.usageMB || '0' }} MB / 
+                    {{ containerStats[container.id].memory?.limitMB || '0' }} MB
+                  </span>
+                </div>
+              </div>
+
+              <!-- Expanded Details -->
+              <transition name="expand">
+                <div v-if="expandedContainer === container.id" class="container-details">
+                  <!-- Tabs -->
+                  <div class="tabs">
+                    <button 
+                      @click="activeTab = 'info'"
+                      :class="{ 'active': activeTab === 'info' }"
+                      class="tab"
+                    >
+                      ℹ️ Info
+                    </button>
+                    <button 
+                      @click="activeTab = 'ports'"
+                      :class="{ 'active': activeTab === 'ports' }"
+                      class="tab"
+                    >
+                      🔌 Ports
+                    </button>
+                    <button 
+                      @click="activeTab = 'logs'; loadLogs(container.id)"
+                      :class="{ 'active': activeTab === 'logs' }"
+                      class="tab"
+                    >
+                      📋 Logs
+                    </button>
+                    <button 
+                      @click="activeTab = 'env'"
+                      :class="{ 'active': activeTab === 'env' }"
+                      class="tab"
+                    >
+                      🔧 Umgebung
+                    </button>
+                  </div>
+
+                  <!-- Tab Content -->
+                  <div class="tab-content">
+                    <!-- Info Tab -->
+                    <div v-if="activeTab === 'info'" class="info-tab">
+                      <div class="info-row">
+                        <span class="info-label">Container ID:</span>
+                        <span class="info-value">{{ container.id.substring(0, 12) }}</span>
+                      </div>
+                      <div class="info-row">
+                        <span class="info-label">Image ID:</span>
+                        <span class="info-value">{{ container.imageId.split(':')[1]?.substring(0, 12) }}</span>
+                      </div>
+                      <div class="info-row">
+                        <span class="info-label">Erstellt:</span>
+                        <span class="info-value">{{ formatDate(container.created) }}</span>
+                      </div>
+                      <div class="info-row">
+                        <span class="info-label">Neustarts:</span>
+                        <span class="info-value">{{ container.restartCount }}</span>
+                      </div>
+                      <div class="info-row" v-if="container.networkSettings?.ipAddress">
+                        <span class="info-label">IP-Adresse:</span>
+                        <span class="info-value">{{ container.networkSettings.ipAddress }}</span>
+                      </div>
+                      <div v-if="container.updateAvailable" class="info-row update-info">
+                        <span class="info-label">Update Status:</span>
+                        <span class="info-value">
+                          ⚠️ Neues Image verfügbar
+                        </span>
+                      </div>
+                    </div>
+
+                    <!-- Ports Tab -->
+                    <div v-if="activeTab === 'ports'" class="ports-tab">
+                      <div v-if="container.ports && container.ports.length > 0">
+                        <div 
+                          v-for="(port, index) in container.ports" 
+                          :key="index"
+                          class="port-item"
+                        >
+                          <span class="port-private">{{ port.PrivatePort }}/{{ port.Type }}</span>
+                          <span v-if="port.PublicPort" class="port-arrow">→</span>
+                          <span v-if="port.PublicPort" class="port-public">
+                            {{ port.IP || '0.0.0.0' }}:{{ port.PublicPort }}
+                          </span>
+                          <span v-else class="port-none">Nicht veröffentlicht</span>
+                        </div>
+                      </div>
+                      <div v-else class="no-data">
+                        Keine Port-Mappings konfiguriert
+                      </div>
+                    </div>
+
+                    <!-- Logs Tab -->
+                    <div v-if="activeTab === 'logs'" class="logs-tab">
+                      <div class="logs-header">
+                        <button @click="loadLogs(container.id)" class="btn-refresh-logs">
+                          🔄 Logs aktualisieren
+                        </button>
+                        <select v-model="logTail" @change="loadLogs(container.id)" class="log-tail-select">
+                          <option value="50">Letzte 50 Zeilen</option>
+                          <option value="100">Letzte 100 Zeilen</option>
+                          <option value="200">Letzte 200 Zeilen</option>
+                          <option value="500">Letzte 500 Zeilen</option>
+                        </select>
+                      </div>
+                      <div v-if="loadingLogs" class="loading-logs">
+                        Lade Logs...
+                      </div>
+                      <pre v-else-if="containerLogs[container.id]" class="logs-content">{{ containerLogs[container.id] }}</pre>
+                      <div v-else class="no-data">
+                        Keine Logs verfügbar
+                      </div>
+                    </div>
+
+                    <!-- Environment Tab -->
+                    <div v-if="activeTab === 'env'" class="env-tab">
+                      <div v-if="container.config?.env && container.config.env.length > 0">
+                        <div 
+                          v-for="(envVar, index) in container.config.env" 
+                          :key="index"
+                          class="env-item"
+                        >
+                          <span class="env-key">{{ envVar.split('=')[0] }}</span>
+                          <span class="env-value">{{ envVar.split('=').slice(1).join('=') }}</span>
+                        </div>
+                      </div>
+                      <div v-else class="no-data">
+                        Keine Umgebungsvariablen konfiguriert
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </transition>
             </div>
-          </transition>
-        </div>
           </div>
         </div>
       </div>
