@@ -13,12 +13,12 @@ const db = new sqlite3.Database(dbPath);
 // Check if Docker Manager already exists
 db.get('SELECT * FROM programs WHERE name = ?', ['Docker Manager'], (err, row) => {
   if (err) {
-    console.error('❌ Error checking database:', err);
+    console.error('Error checking database:', err);
     process.exit(1);
   }
   
   if (row) {
-    console.log('✅ Docker Manager already exists in database');
+    console.log('Docker Manager already exists in database');
     db.close();
     return;
   }
@@ -29,7 +29,7 @@ db.get('SELECT * FROM programs WHERE name = ?', ['Docker Manager'], (err, row) =
     ['Docker Manager', '/apps/docker', '/icons/docker.svg', 4, 0],
     function(err) {
       if (err) {
-        console.error('❌ Error inserting Docker Manager:', err);
+        console.error('EV1.1.3rror inserting Docker Manager:', err);
         process.exit(1);
       }
       
