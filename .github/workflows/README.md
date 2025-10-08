@@ -1,10 +1,18 @@
 # GitHub Actions Workflows
 
-## 🚀 docker.yml - Automatischer Docker Build bei Releases
+## 🚀 docker.yml - Automatischer Docker Build und Push
 
 ### Trigger
-Dieser Workflow wird **nur bei neuen GitHub Releases** ausgeführt:
-- Wenn ein Release mit dem Status `published` erstellt wird
+Dieser Workflow wird in **zwei Szenarien** ausgeführt:
+
+1. **Bei jedem Push auf `main` Branch**
+   - Aktualisiert automatisch das `latest` Tag auf Docker Hub
+   - Ideal für kontinuierliche Entwicklung und Testing
+
+2. **Bei neuen GitHub Releases**
+   - Erstellt versionierte Tags (z.B. `v2.0.0`)
+   - Aktualisiert zusätzlich das `latest` Tag
+   - Aktualisiert die Docker Hub Beschreibung
 
 ### Was macht der Workflow?
 
@@ -16,13 +24,13 @@ Dieser Workflow wird **nur bei neuen GitHub Releases** ausgeführt:
    - Pusht das Image zu Docker Hub: `uptecps/updesk`
    - Verwendet GitHub Secrets für Authentifizierung
 
-3. **Zwei Tags**
-   - Release-Tag: `uptecps/updesk:v2.0.0` (Beispiel)
-   - Latest-Tag: `uptecps/updesk:latest`
+3. **Intelligente Tag-Verwaltung**
+   - **Bei Push auf main**: Nur `latest` Tag wird aktualisiert
+   - **Bei Release**: Release-Tag (z.B. `v2.0.0`) + `latest` Tag
 
 4. **Metadata**
    - Fügt OCI-konforme Labels hinzu
-   - Aktualisiert die Docker Hub Beschreibung
+   - Aktualisiert die Docker Hub Beschreibung (nur bei Releases)
 
 5. **Build Summary**
    - Erstellt eine übersichtliche Zusammenfassung im GitHub Actions Tab
@@ -43,36 +51,60 @@ Stelle sicher, dass folgende Secrets in deinem Repository konfiguriert sind:
 
 ### Verwendung
 
-#### 1. Neues Release erstellen
+#### Szenario 1: Automatisches Update bei Push (latest Tag)
+
+Einfach Code auf den `main` Branch pushen:
+
+```bash
+# Änderungen committen
+git add .
+git commit -m "feat: neue Funktion hinzugefügt"
+
+# Auf main pushen
+git push origin main
+```
+
+**Was passiert:**
+- Workflow startet automatisch
+- Baut Docker Image für beide Plattformen
+- Pusht nur das `latest` Tag zu Docker Hub
+- Nutzer können sofort die neueste Version mit `docker pull uptecps/updesk:latest` ziehen
+
+#### Szenario 2: Versioniertes Release erstellen
+
+##### 1. Neues Release erstellen
 
 ```bash
 # Tag erstellen
-git tag -a v2.0.0 -m "Release v2.0.0 - Apache-Only"
+git tag -a v2.0.0 -m "Release v2.0.0 - Neue Features"
 
 # Tag pushen
 git push origin v2.0.0
 ```
 
-#### 2. Release auf GitHub veröffentlichen
+##### 2. Release auf GitHub veröffentlichen
 
 1. Gehe zu: `Releases` → `Draft a new release`
 2. Wähle den Tag: `v2.0.0`
-3. Titel: `v2.0.0 - Apache-Only Release`
-4. Beschreibung hinzufügen
+3. Titel: `v2.0.0 - Neue Features`
+4. Beschreibung hinzufügen (Changelog, Breaking Changes, etc.)
 5. Klicke auf `Publish release`
 
-#### 3. Workflow läuft automatisch
+##### 3. Workflow läuft automatisch
 
 Der Workflow startet automatisch und:
 - Baut das Docker Image
-- Pusht zu Docker Hub mit Tags `v2.0.0` und `latest`
+- Pusht zu Docker Hub mit Tags `v2.0.0` **und** `latest`
 - Aktualisiert die Docker Hub Beschreibung
+- Erstellt eine detaillierte Build Summary
 
 ### Workflow-Status überprüfen
 
-- Gehe zu: `Actions` → `Docker Release Build`
+- Gehe zu: `Actions` → `Docker Build and Push`
 - Sieh dir die Build-Logs an
 - Überprüfe die Build Summary
+- Bei Push: Zeigt "Docker Latest Build Successful"
+- Bei Release: Zeigt "Docker Release Build Successful"
 
 ### Docker Image verwenden
 
@@ -92,12 +124,13 @@ docker-compose up -d
 ### Features
 
 ✅ **Multi-Platform Support** - AMD64 und ARM64  
-✅ **Automatische Builds** - Bei jedem Release  
-✅ **Zwei Tags** - Release-Version und latest  
+✅ **Automatische Builds** - Bei jedem Push auf main **und** bei Releases  
+✅ **Intelligente Tag-Verwaltung** - `latest` bei Push, Release-Version + `latest` bei Releases  
 ✅ **Build Cache** - Schnellere Builds durch GitHub Actions Cache  
 ✅ **OCI Labels** - Standardisierte Metadaten  
-✅ **Docker Hub Sync** - Automatische Beschreibungsaktualisierung  
-✅ **Build Summary** - Übersichtliche Zusammenfassung  
+✅ **Docker Hub Sync** - Automatische Beschreibungsaktualisierung (bei Releases)  
+✅ **Build Summary** - Übersichtliche Zusammenfassung für beide Szenarien  
+✅ **Continuous Deployment** - Neueste Entwicklungsversion immer verfügbar  
 
 ### Troubleshooting
 

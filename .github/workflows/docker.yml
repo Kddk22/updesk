@@ -1,6 +1,9 @@
-name: Docker Release Build
+name: Docker Build and Push
 
 on:
+  push:
+    branches:
+      - main
   release:
     types: [published]
 
@@ -28,13 +31,22 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Extract release tag
+      - name: Extract metadata
         id: meta
         run: |
-          echo "RELEASE_TAG=${{ github.event.release.tag_name }}" >> $GITHUB_OUTPUT
-          echo "Building Docker image with tags: ${{ github.event.release.tag_name }} and latest"
+          if [ "${{ github.event_name }}" == "release" ]; then
+            echo "RELEASE_TAG=${{ github.event.release.tag_name }}" >> $GITHUB_OUTPUT
+            echo "IS_RELEASE=true" >> $GITHUB_OUTPUT
+            echo "VERSION=${{ github.event.release.tag_name }}" >> $GITHUB_OUTPUT
+            echo "Building Docker image for release: ${{ github.event.release.tag_name }}"
+          else
+            echo "IS_RELEASE=false" >> $GITHUB_OUTPUT
+            echo "VERSION=dev-${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
+            echo "Building Docker image for push to main branch"
+          fi
 
-      - name: Build and push Docker image
+      - name: Build and push Docker image (Release)
+        if: github.event_name == 'release'
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -56,7 +68,30 @@ jobs:
           build-args: |
             NODE_OPTIONS=--max-old-space-size=2048
 
+      - name: Build and push Docker image (Push to main)
+        if: github.event_name == 'push'
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: |
+            ${{ env.DOCKER_USERNAME }}/${{ env.IMAGE_NAME }}:latest
+          labels: |
+            org.opencontainers.image.title=UpDesk
+            org.opencontainers.image.description=Modern Virtual Desktop Launcher with Ubuntu-style Taskbar
+            org.opencontainers.image.version=dev-${{ github.sha }}
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.created=${{ github.event.head_commit.timestamp }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            NODE_OPTIONS=--max-old-space-size=2048
+
       - name: Update Docker Hub description
+        if: github.event_name == 'release'
         uses: peter-evans/dockerhub-description@v3
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
@@ -65,9 +100,10 @@ jobs:
           short-description: "UpDesk - Modern Virtual Desktop Launcher with Ubuntu-style Taskbar"
           readme-filepath: ./DOCKER-README.md
 
-      - name: Build summary
+      - name: Build summary (Release)
+        if: github.event_name == 'release'
         run: |
-          echo "## 🚀 Docker Build Successful!" >> $GITHUB_STEP_SUMMARY
+          echo "## 🚀 Docker Release Build Successful!" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Release:** ${{ github.event.release.tag_name }}" >> $GITHUB_STEP_SUMMARY
           echo "**Docker Image:** \`${{ env.DOCKER_USERNAME }}/${{ env.IMAGE_NAME }}\`" >> $GITHUB_STEP_SUMMARY
@@ -84,5 +120,26 @@ jobs:
           echo "\`\`\`bash" >> $GITHUB_STEP_SUMMARY
           echo "docker pull ${{ env.DOCKER_USERNAME }}/${{ env.IMAGE_NAME }}:${{ github.event.release.tag_name }}" >> $GITHUB_STEP_SUMMARY
           echo "# or" >> $GITHUB_STEP_SUMMARY
+          echo "docker pull ${{ env.DOCKER_USERNAME }}/${{ env.IMAGE_NAME }}:latest" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+
+      - name: Build summary (Push)
+        if: github.event_name == 'push'
+        run: |
+          echo "## 🚀 Docker Latest Build Successful!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Branch:** main" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Docker Image:** \`${{ env.DOCKER_USERNAME }}/${{ env.IMAGE_NAME }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📦 Published Tags:" >> $GITHUB_STEP_SUMMARY
+          echo "- \`latest\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🏗️ Platforms:" >> $GITHUB_STEP_SUMMARY
+          echo "- linux/amd64" >> $GITHUB_STEP_SUMMARY
+          echo "- linux/arm64" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📥 Pull Command:" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`bash" >> $GITHUB_STEP_SUMMARY
           echo "docker pull ${{ env.DOCKER_USERNAME }}/${{ env.IMAGE_NAME }}:latest" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY

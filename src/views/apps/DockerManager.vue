@@ -9,41 +9,119 @@
     @close="$emit('close')"
   >
     <div class="docker-manager">
-      <!-- Header with refresh button -->
-      <div class="header">
-        <div class="header-left">
-          <h2>🐳 Container Übersicht</h2>
-          <span class="container-count">{{ containers.length }} Container</span>
+      <!-- Sidebar Navigation -->
+      <div class="sidebar">
+        <div class="sidebar-header">
+          <div class="app-logo">
+            <span class="logo-icon">🐳</span>
+            <span class="logo-text">Docker Manager</span>
+          </div>
         </div>
-        <div class="header-right">
+        
+        <nav class="sidebar-nav">
+          <button
+            v-for="item in navigationItems"
+            :key="item.key"
+            class="nav-item"
+            :class="{ active: activeView === item.key }"
+            @click="activeView = item.key"
+          >
+            <span class="nav-icon">{{ item.icon }}</span>
+            <span class="nav-text">{{ item.label }}</span>
+          </button>
+        </nav>
+        
+        <div class="sidebar-footer">
           <button 
             @click="refreshContainers" 
             class="btn-refresh"
             :disabled="loading"
           >
             <span :class="{ 'spinning': loading }">🔄</span>
-            Aktualisieren
+            <span>Aktualisieren</span>
           </button>
         </div>
       </div>
 
-      <!-- Loading state -->
-      <div v-if="loading && containers.length === 0" class="loading">
-        <div class="spinner"></div>
-        <p>Lade Container...</p>
-      </div>
+      <!-- Main Content -->
+      <div class="main-content">
+        <!-- Overview -->
+        <div v-if="activeView === 'overview'" class="view-content">
+          <div class="view-header">
+            <h2>Übersicht</h2>
+            <p>Docker Container Status und Verwaltung</p>
+          </div>
 
-      <!-- Error state -->
-      <div v-else-if="error" class="error-message">
-        <span>⚠️</span>
-        <div>
-          <strong>Fehler beim Laden der Container</strong>
-          <p>{{ error }}</p>
+          <!-- Loading state -->
+          <div v-if="loading && containers.length === 0" class="loading">
+            <div class="spinner"></div>
+            <p>Lade Container...</p>
+          </div>
+
+          <!-- Error state -->
+          <div v-else-if="error" class="error-message">
+            <span>⚠️</span>
+            <div>
+              <strong>Fehler beim Laden der Container</strong>
+              <p>{{ error }}</p>
+            </div>
+          </div>
+
+          <!-- Stats Grid -->
+          <div v-else class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-icon">📦</div>
+              <div class="stat-info">
+                <h3>Gesamt</h3>
+                <p class="stat-value">{{ containers.length }}</p>
+                <p class="stat-label">Container</p>
+              </div>
+            </div>
+            
+            <div class="stat-card">
+              <div class="stat-icon">✅</div>
+              <div class="stat-info">
+                <h3>Laufend</h3>
+                <p class="stat-value">{{ runningContainers }}</p>
+                <p class="stat-label">Container</p>
+              </div>
+            </div>
+            
+            <div class="stat-card">
+              <div class="stat-icon">⏸️</div>
+              <div class="stat-info">
+                <h3>Gestoppt</h3>
+                <p class="stat-value">{{ stoppedContainers }}</p>
+                <p class="stat-label">Container</p>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
 
-      <!-- Container list -->
-      <div v-else class="container-list">
+        <!-- Containers List -->
+        <div v-if="activeView === 'containers'" class="view-content">
+          <div class="view-header">
+            <h2>Container</h2>
+            <p>Alle Docker Container verwalten</p>
+          </div>
+
+          <!-- Loading state -->
+          <div v-if="loading && containers.length === 0" class="loading">
+            <div class="spinner"></div>
+            <p>Lade Container...</p>
+          </div>
+
+          <!-- Error state -->
+          <div v-else-if="error" class="error-message">
+            <span>⚠️</span>
+            <div>
+              <strong>Fehler beim Laden der Container</strong>
+              <p>{{ error }}</p>
+            </div>
+          </div>
+
+          <!-- Container list -->
+          <div v-else class="container-list">
         <div 
           v-for="container in containers" 
           :key="container.id"
@@ -257,19 +335,22 @@
             </div>
           </transition>
         </div>
+          </div>
+        </div>
       </div>
     </div>
   </DesktopWindow>
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import DesktopWindow from '../../components/DesktopWindow.vue'
 import axios from 'axios'
 
 const emit = defineEmits(['close'])
 
 // State
+const activeView = ref('overview')
 const containers = ref([])
 const loading = ref(false)
 const error = ref(null)
@@ -279,6 +360,21 @@ const containerLogs = ref({})
 const containerStats = ref({})
 const loadingLogs = ref(false)
 const logTail = ref(100)
+
+// Navigation
+const navigationItems = [
+  { key: 'overview', label: 'Übersicht', icon: '📊' },
+  { key: 'containers', label: 'Container', icon: '📦' }
+]
+
+// Computed
+const runningContainers = computed(() => {
+  return containers.value.filter(c => c.state === 'running').length
+})
+
+const stoppedContainers = computed(() => {
+  return containers.value.filter(c => c.state !== 'running').length
+})
 
 // Auto-refresh interval
 let refreshInterval = null
@@ -395,65 +491,189 @@ onUnmounted(() => {
 
 <style scoped>
 .docker-manager {
+  display: flex;
   height: 100%;
+  background: var(--bg-primary);
+}
+
+/* Sidebar */
+.sidebar {
+  width: 200px;
+  background: var(--bg-secondary);
+  border-right: 1px solid var(--border-color);
   display: flex;
   flex-direction: column;
-  background: var(--bg-primary);
-  color: var(--text-primary);
 }
 
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 20px;
+.sidebar-header {
+  padding: 16px;
   border-bottom: 1px solid var(--border-color);
-  background: var(--bg-secondary);
 }
 
-.header-left {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-}
-
-.header-left h2 {
-  margin: 0;
-  font-size: 20px;
-  font-weight: 600;
-}
-
-.container-count {
-  padding: 4px 12px;
-  background: var(--accent-color);
-  color: white;
-  border-radius: 12px;
-  font-size: 12px;
-  font-weight: 600;
-}
-
-.btn-refresh {
+.app-logo {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 16px;
+}
+
+.logo-icon {
+  font-size: 20px;
+}
+
+.logo-text {
+  font-weight: 600;
+  font-size: 16px;
+  color: var(--text-primary);
+}
+
+.sidebar-nav {
+  flex: 1;
+  padding: 8px;
+}
+
+.nav-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  margin-bottom: 4px;
+  text-align: left;
+}
+
+.nav-item:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.nav-item.active {
+  background: var(--accent-color);
+  color: white;
+}
+
+.nav-icon {
+  font-size: 16px;
+  width: 20px;
+  text-align: center;
+}
+
+.nav-text {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.sidebar-footer {
+  padding: 16px;
+  border-top: 1px solid var(--border-color);
+}
+
+.btn-refresh {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 16px;
   background: var(--accent-color);
   color: white;
   border: none;
   border-radius: 6px;
   cursor: pointer;
   font-weight: 500;
+  font-size: 14px;
   transition: all 0.2s;
 }
 
 .btn-refresh:hover:not(:disabled) {
-  background: var(--accent-hover);
-  transform: translateY(-1px);
+  background: var(--accent-color-dark);
 }
 
 .btn-refresh:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+/* Main Content */
+.main-content {
+  flex: 1;
+  overflow: auto;
+}
+
+.view-content {
+  padding: 24px;
+  max-width: 1200px;
+}
+
+.view-header {
+  margin-bottom: 24px;
+}
+
+.view-header h2 {
+  margin: 0 0 8px 0;
+  color: var(--text-primary);
+  font-size: 24px;
+  font-weight: 600;
+}
+
+.view-header p {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+/* Stats Grid */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.stat-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.stat-icon {
+  font-size: 32px;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--accent-color-light);
+  border-radius: 8px;
+}
+
+.stat-info h3 {
+  margin: 0 0 4px 0;
+  color: var(--text-primary);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.stat-value {
+  margin: 0 0 2px 0;
+  color: var(--text-primary);
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.stat-label {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 12px;
 }
 
 .spinning {
@@ -471,7 +691,7 @@ onUnmounted(() => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 100%;
+  padding: 60px 20px;
   gap: 20px;
 }
 
@@ -489,7 +709,6 @@ onUnmounted(() => {
   align-items: center;
   gap: 15px;
   padding: 20px;
-  margin: 20px;
   background: #fee;
   border: 1px solid #fcc;
   border-radius: 8px;
@@ -501,43 +720,41 @@ onUnmounted(() => {
 }
 
 .container-list {
-  flex: 1;
-  overflow-y: auto;
-  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .container-card {
   background: var(--bg-secondary);
-  border: 2px solid var(--border-color);
-  border-radius: 12px;
-  margin-bottom: 15px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
   overflow: hidden;
-  transition: all 0.3s;
+  transition: all 0.2s;
 }
 
 .container-card.running {
-  border-color: #28ca42;
+  border-left: 4px solid #28ca42;
 }
 
 .container-card.stopped {
-  border-color: #888;
+  border-left: 4px solid #888;
 }
 
 .container-card.has-update {
-  border-color: #ff9500;
+  border-left: 4px solid #ff9500;
 }
 
 .container-card:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  transform: translateY(-2px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .container-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 15px 20px;
-  background: var(--bg-tertiary);
+  padding: 16px 20px;
+  background: var(--bg-primary);
 }
 
 .container-info {
@@ -631,7 +848,7 @@ onUnmounted(() => {
   display: flex;
   gap: 20px;
   padding: 12px 20px;
-  background: var(--bg-primary);
+  background: var(--bg-secondary);
   border-top: 1px solid var(--border-color);
 }
 
@@ -657,7 +874,7 @@ onUnmounted(() => {
 
 .container-details {
   border-top: 1px solid var(--border-color);
-  background: var(--bg-primary);
+  background: var(--bg-secondary);
 }
 
 .tabs {
@@ -702,8 +919,9 @@ onUnmounted(() => {
 .info-row {
   display: flex;
   justify-content: space-between;
-  padding: 10px;
-  background: var(--bg-secondary);
+  padding: 12px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
   border-radius: 6px;
 }
 
@@ -732,8 +950,9 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 10px;
-  background: var(--bg-secondary);
+  padding: 12px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
   border-radius: 6px;
   font-family: monospace;
   font-size: 13px;
@@ -817,8 +1036,9 @@ onUnmounted(() => {
 .env-item {
   display: flex;
   gap: 10px;
-  padding: 10px;
-  background: var(--bg-secondary);
+  padding: 12px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
   border-radius: 6px;
   font-family: monospace;
   font-size: 13px;
@@ -880,5 +1100,38 @@ onUnmounted(() => {
 .tab-content::-webkit-scrollbar-thumb:hover,
 .logs-content::-webkit-scrollbar-thumb:hover {
   background: var(--text-secondary);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .docker-manager {
+    flex-direction: column;
+  }
+  
+  .sidebar {
+    width: 100%;
+    height: auto;
+  }
+  
+  .sidebar-nav {
+    display: flex;
+    flex-direction: row;
+    overflow-x: auto;
+    padding: 8px;
+  }
+  
+  .nav-item {
+    white-space: nowrap;
+    margin-right: 8px;
+    margin-bottom: 0;
+  }
+  
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .container-actions {
+    flex-wrap: wrap;
+  }
 }
 </style>
